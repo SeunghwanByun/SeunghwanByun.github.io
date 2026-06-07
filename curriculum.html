@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Seunghwan Byun의 공부 커리큘럼 목록입니다.">
+    <title>Curriculum | Seunghwan Byun</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="site-title" href="index.html">Seunghwan Byun</a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="about.html">About</a>
+        <a href="research.html">Research</a>
+        <a class="active" href="curriculum.html">Curriculum</a>
+        <a href="projects.html">Projects</a>
+        <a href="roadmap.html">Roadmap</a>
+      </nav>
+    </header>
+
+    <main class="site-shell">
+      <aside class="sidebar" aria-label="Curriculum sections">
+        <section class="side-section no-top">
+          <h2>Tracks</h2>
+          <ul>
+            <li><a href="#math-foundations">Math Foundations</a></li>
+            <li><a href="#programming">Programming</a></li>
+            <li><a href="#computer-systems">Computer Systems</a></li>
+            <li><a href="#robotics">Robotics</a></li>
+            <li><a href="#state-estimation">State Estimation</a></li>
+            <li><a href="#slam">SLAM</a></li>
+            <li><a href="#ai">AI</a></li>
+          </ul>
+        </section>
+      </aside>
+
+      <section class="content">
+        <header class="page-intro">
+          <p class="kicker">Curriculum</p>
+          <h1>공부할 주제 목록</h1>
+          <p>
+            내용은 비워두고, 앞으로 하나씩 채워갈 글 목록만 정리합니다.
+            완전히 이해한 글만 Research 또는 Posts에 연결합니다.
+          </p>
+        </header>
+
+        <section id="math-foundations" class="curriculum-section">
+          <h2>Math Foundations</h2>
+          <ul class="curriculum-list">
+            <li>왜 로보틱스에서 선형대수가 중요한가</li>
+            <li>Vector, Matrix, Basis 정리</li>
+            <li>Rank, Inverse, Eigenvalue, Eigenvector</li>
+            <li>SVD를 왜 쓰는가</li>
+            <li>Least Squares는 무엇을 최소화하는가</li>
+            <li>Derivative, Partial Derivative, Gradient</li>
+            <li>Jacobian은 왜 SLAM에서 계속 나오는가</li>
+            <li>Taylor Expansion과 Linearization</li>
+            <li>Gaussian Distribution과 Covariance</li>
+            <li>Bayes Rule을 State Estimation 관점에서 이해하기</li>
+            <li>Maximum Likelihood와 MAP Estimation</li>
+            <li>Gradient Descent, Newton Method, Gauss-Newton</li>
+            <li>Levenberg-Marquardt와 Nonlinear Least Squares</li>
+          </ul>
+        </section>
+
+        <section id="programming" class="curriculum-section">
+          <h2>Programming / Implementation</h2>
+          <ul class="curriculum-list">
+            <li>NumPy로 2D Rotation 구현하기</li>
+            <li>Matplotlib으로 Trajectory 시각화하기</li>
+            <li>OpenCV Feature Matching 첫 실습</li>
+            <li>C Pointer를 로보틱스 예제로 이해하기</li>
+            <li>Compile, Link, Build System 기초</li>
+            <li>Debugging과 Visualization으로 실험 확인하기</li>
+            <li>Unit Test를 작은 수학 함수에 적용하기</li>
+            <li>Profiling으로 병목 찾기</li>
+            <li>ROS Topic과 Message는 무엇인가</li>
+            <li>ROS TF와 Coordinate Transform</li>
+          </ul>
+        </section>
+
+        <section id="computer-systems" class="curriculum-section">
+          <h2>Computer Systems</h2>
+          <ul class="curriculum-list">
+            <li>Process와 Thread의 차이</li>
+            <li>Context Switching은 왜 비용이 드는가</li>
+            <li>pthread로 Race Condition 확인하기</li>
+            <li>Mutex와 Semaphore의 차이</li>
+            <li>Deadlock은 어떻게 생기는가</li>
+            <li>Stack, Heap, Data, Text 메모리 구조</li>
+            <li>Virtual Memory와 Page</li>
+            <li>Cache Locality가 성능에 미치는 영향</li>
+            <li>System Call은 왜 필요한가</li>
+            <li>User Mode와 Kernel Mode</li>
+            <li>Scheduler와 Interrupt 기초</li>
+            <li>로봇 제어에서 Real-time이 중요한 이유</li>
+          </ul>
+        </section>
+
+        <section id="robotics" class="curriculum-section">
+          <h2>Robotics Fundamentals</h2>
+          <ul class="curriculum-list">
+            <li>Rigid Body의 Pose란 무엇인가</li>
+            <li>World Frame, Body Frame, Camera Frame</li>
+            <li>2D Rotation Matrix를 직접 유도하기</li>
+            <li>3D Rotation Matrix와 Euler Angle</li>
+            <li>Quaternion은 왜 필요한가</li>
+            <li>Homogeneous Transformation은 왜 필요한가</li>
+            <li>Forward Kinematics와 Inverse Kinematics</li>
+            <li>Robot Jacobian의 의미</li>
+            <li>Differential Drive Robot Kinematics</li>
+            <li>Unicycle Model과 Non-holonomic Constraint</li>
+          </ul>
+        </section>
+
+        <section id="vehicle-drone" class="curriculum-section">
+          <h2>Vehicle / Drone Dynamics</h2>
+          <ul class="curriculum-list">
+            <li>Ackermann Steering과 Bicycle Model</li>
+            <li>Bicycle Model을 왜 쓰는가</li>
+            <li>Vehicle Yaw Rate 직관적으로 이해하기</li>
+            <li>Turning Radius와 Steering Angle</li>
+            <li>Tire Model과 Slip Angle</li>
+            <li>Longitudinal Dynamics와 Lateral Dynamics</li>
+            <li>Quadrotor의 좌표계와 상태 변수</li>
+            <li>Roll, Pitch, Yaw와 Angular Velocity</li>
+            <li>Thrust와 Torque</li>
+            <li>Drone Dynamics를 읽기 위한 기본 식</li>
+          </ul>
+        </section>
+
+        <section id="state-estimation" class="curriculum-section">
+          <h2>State Estimation</h2>
+          <ul class="curriculum-list">
+            <li>Kalman Filter를 왜 쓰는가</li>
+            <li>State, Measurement, Prediction, Correction</li>
+            <li>1D Kalman Filter를 Python으로 구현하기</li>
+            <li>Matrix Form Kalman Filter</li>
+            <li>Process Noise와 Measurement Noise의 차이</li>
+            <li>EKF는 왜 Jacobian이 필요한가</li>
+            <li>UKF의 직관</li>
+            <li>Particle Filter의 직관</li>
+            <li>IMU와 Wheel Encoder Sensor Fusion</li>
+          </ul>
+        </section>
+
+        <section id="control" class="curriculum-section">
+          <h2>Control</h2>
+          <ul class="curriculum-list">
+            <li>Feedback Control이란 무엇인가</li>
+            <li>Open-loop와 Closed-loop</li>
+            <li>PID Controller를 직접 구현하기</li>
+            <li>Overshoot와 Steady-state Error</li>
+            <li>Pure Pursuit Path Tracking 정리</li>
+            <li>Stanley Controller 개념 정리</li>
+            <li>LQR 기초</li>
+            <li>Drone Altitude Control에 PID 적용하기</li>
+            <li>Cascade Control의 의미</li>
+          </ul>
+        </section>
+
+        <section id="perception" class="curriculum-section">
+          <h2>Perception</h2>
+          <ul class="curriculum-list">
+            <li>카메라 모델 정리</li>
+            <li>Intrinsic Matrix는 무엇을 의미하는가</li>
+            <li>Extrinsic Matrix와 Camera Pose</li>
+            <li>Camera Calibration과 Distortion</li>
+            <li>OpenCV로 Feature Matching 해보기</li>
+            <li>Optical Flow는 무엇을 추정하는가</li>
+            <li>Stereo Vision과 Depth Estimation</li>
+            <li>Object Detection 기초</li>
+            <li>Segmentation 기초</li>
+            <li>Camera, LiDAR, Radar, IMU Sensor Fusion</li>
+          </ul>
+        </section>
+
+        <section id="tracking" class="curriculum-section">
+          <h2>Tracking</h2>
+          <ul class="curriculum-list">
+            <li>Multi Object Tracking의 기본 문제 정의</li>
+            <li>Detection과 Tracking의 차이</li>
+            <li>ID Switch와 Occlusion</li>
+            <li>Data Association은 왜 어려운가</li>
+            <li>Hungarian Algorithm 직관 정리</li>
+            <li>SORT 논문 리뷰</li>
+            <li>DeepSORT는 SORT에서 무엇을 추가했는가</li>
+            <li>ByteTrack과 OC-SORT</li>
+            <li>MOTA, MOTP, IDF1, HOTA</li>
+          </ul>
+        </section>
+
+        <section id="slam" class="curriculum-section">
+          <h2>SLAM</h2>
+          <ul class="curriculum-list">
+            <li>Visual Odometry는 SLAM과 뭐가 다른가</li>
+            <li>Odometry, Localization, Mapping</li>
+            <li>Essential Matrix로 Relative Pose 추정하기</li>
+            <li>Triangulation은 무엇을 복원하는가</li>
+            <li>Bundle Adjustment의 역할</li>
+            <li>Pose Graph Optimization 개념 정리</li>
+            <li>Factor Graph는 무엇인가</li>
+            <li>Loop Closure는 왜 중요한가</li>
+            <li>ORB-SLAM 구조 뜯어보기</li>
+            <li>VIO와 IMU Preintegration 기초</li>
+          </ul>
+        </section>
+
+        <section id="spatial-ai" class="curriculum-section">
+          <h2>Spatial AI / 3D Representation</h2>
+          <ul class="curriculum-list">
+            <li>Point Cloud, Mesh, Voxel의 차이</li>
+            <li>Occupancy Grid Map은 무엇인가</li>
+            <li>Semantic Map과 Object-centric Map</li>
+            <li>3D Scene Graph 기초</li>
+            <li>NeRF를 SLAM 관점에서 이해하기</li>
+            <li>Gaussian Splatting은 왜 빠른가</li>
+            <li>Implicit Representation과 Neural Map</li>
+            <li>Spatial AI란 무엇인가</li>
+            <li>Embodied Spatial Reasoning</li>
+          </ul>
+        </section>
+
+        <section id="ai" class="curriculum-section">
+          <h2>Deep Learning / Transformer</h2>
+          <ul class="curriculum-list">
+            <li>Backpropagation을 내 말로 설명하기</li>
+            <li>MLP, Loss, Optimizer 기초</li>
+            <li>CNN의 Convolution은 무엇을 보는가</li>
+            <li>Receptive Field와 Feature Map</li>
+            <li>Transformer의 Attention을 내 말로 설명하기</li>
+            <li>Attention을 NumPy로 구현하기</li>
+            <li>Token, Embedding, Positional Encoding</li>
+            <li>Pretraining과 Fine-tuning</li>
+          </ul>
+        </section>
+
+        <section id="vlm-vla" class="curriculum-section">
+          <h2>VLM / VLA / Embodied AI</h2>
+          <ul class="curriculum-list">
+            <li>VLM과 VLA의 차이</li>
+            <li>Image Encoder와 Language Model 연결</li>
+            <li>Contrastive Learning 기초</li>
+            <li>Vision-Language-Action 논문 읽는 법</li>
+            <li>Action Space는 왜 중요한가</li>
+            <li>Robot Dataset은 어떻게 구성되는가</li>
+            <li>RT-1, RT-2 논문 리뷰</li>
+            <li>OpenVLA 읽기 전 필요한 개념</li>
+            <li>Diffusion Policy 기초</li>
+          </ul>
+        </section>
+
+        <section id="llm-agents" class="curriculum-section">
+          <h2>LLM / AI Agents</h2>
+          <ul class="curriculum-list">
+            <li>LLM은 왜 Hallucination을 하는가</li>
+            <li>Token, Context, Instruction Tuning</li>
+            <li>Prompt Engineering을 실험으로 이해하기</li>
+            <li>Structured Output과 Tool Use</li>
+            <li>LLM Agent란 무엇인가</li>
+            <li>Planning, Memory, Reflection</li>
+            <li>Tool Use Agent의 실패 사례 정리</li>
+            <li>LLM 평가를 어떻게 할 것인가</li>
+          </ul>
+        </section>
+
+        <section id="research-practice" class="curriculum-section">
+          <h2>Paper Review / Research Practice</h2>
+          <ul class="curriculum-list">
+            <li>논문 리뷰 템플릿 만들기</li>
+            <li>논문을 읽을 때 먼저 봐야 할 것</li>
+            <li>Problem, Method, Experiment, Limitation</li>
+            <li>Code Reading과 Reproduction</li>
+            <li>Dataset, Baseline, Metric 정리법</li>
+            <li>실험 재현이 실패했을 때 기록하는 법</li>
+            <li>좋은 Research Question을 만드는 법</li>
+            <li>블로그 글을 강의 노트로 확장하는 법</li>
+          </ul>
+        </section>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>2026 © Seunghwan Byun</p>
+    </footer>
+  </body>
+</html>
