@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Seunghwan Byun의 개발 프로젝트와 구현 로그를 정리하는 페이지입니다.">
+    <title>Projects | Seunghwan Byun</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="site-title" href="index.html">Seunghwan Byun</a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="about.html">About</a>
+        <a href="research.html">Research</a>
+        <a class="active" href="projects.html">Projects</a>
+        <a href="roadmap.html">Roadmap</a>
+      </nav>
+    </header>
+
+    <main class="site-shell">
+      <aside class="sidebar" aria-label="Project categories">
+        <section class="side-section no-top">
+          <h2>Status</h2>
+          <ul>
+            <li>In progress</li>
+            <li>Planned</li>
+            <li>Draft</li>
+          </ul>
+        </section>
+      </aside>
+
+      <section class="content">
+        <header class="page-intro">
+          <p class="kicker">Projects</p>
+          <h1>공부한 내용을 작은 구현으로 검증합니다.</h1>
+          <p>프로젝트는 데모보다 배운 점과 재현 과정을 남기는 데 초점을 둡니다.</p>
+        </header>
+
+        <section class="post-list" aria-label="Project list">
+          <article class="post-preview">
+            <h3>Personal Research Blog</h3>
+            <p class="post-meta">HTML · CSS · GitHub Pages · In progress</p>
+            <p>논문 노트와 구현 로그를 정리하기 위한 정적 블로그입니다.</p>
+          </article>
+          <article class="post-preview">
+            <h3>Visual SLAM Study Implementation</h3>
+            <p class="post-meta">Python · OpenCV · NumPy · Planned</p>
+            <p>feature tracking, pose estimation, sparse mapping을 단계별로 구현할 예정입니다.</p>
+          </article>
+          <article class="post-preview">
+            <h3>VLA Paper Reproduction Notes</h3>
+            <p class="post-meta">Python · PyTorch · Robotics · Draft</p>
+            <p>VLA 논문의 데이터, 모델 구조, 평가 방식을 재현 가능한 노트로 정리합니다.</p>
+          </article>
+        </section>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>2026 © Seunghwan Byun</p>
+    </footer>
+  </body>
+</html>

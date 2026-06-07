@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Visual Odometry와 Visual SLAM 공부를 시작하며 정리한 구현 계획입니다.">
+    <title>Visual Odometry 공부를 시작하며 | Seunghwan Byun</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="site-title" href="../index.html">Seunghwan Byun</a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="../about.html">About</a>
+        <a class="active" href="../research.html">Research</a>
+        <a href="../curriculum.html">Curriculum</a>
+        <a href="../projects.html">Projects</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </nav>
+    </header>
+
+    <main class="post-layout">
+      <article class="post-body">
+        <p class="post-meta">2026, Jun 07 · SLAM · Implementation Log</p>
+        <h1>Visual Odometry 공부를 시작하며</h1>
+        <p>
+          Visual SLAM을 바로 구현하기 전에 Visual Odometry를 먼저 작은 단위로 나누어 공부하려고 합니다.
+          목표는 전체 시스템을 한 번에 만드는 것이 아니라, 각 단계가 어떤 가정에 의존하는지 확인하는 것입니다.
+        </p>
+
+        <h2>먼저 볼 것</h2>
+        <ul>
+          <li>Feature detection and matching</li>
+          <li>Essential matrix and relative pose estimation</li>
+          <li>Triangulation and reprojection error</li>
+          <li>Bundle adjustment의 역할</li>
+        </ul>
+
+        <h2>구현 로그에 남길 것</h2>
+        <p>
+          코드가 돌아가는지뿐 아니라 어떤 장면에서 실패하는지, 파라미터가 결과에 어떤 영향을 주는지,
+          데이터셋별 차이가 어디에서 생기는지를 함께 기록합니다.
+        </p>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <p><a href="../research.html">Back to Research</a></p>
+    </footer>
+  </body>
+</html>
