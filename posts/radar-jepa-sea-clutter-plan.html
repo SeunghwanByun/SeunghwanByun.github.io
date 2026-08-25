@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Radar PPI sequence에서 Sea Clutter를 탐지하기 위한 JEPA 계열 self-supervised learning 접근 계획입니다."
+    >
+    <title>Radar PPI Sequence와 JEPA 기반 Sea Clutter 탐지 계획 | Seunghwan Byun</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="site-title" href="../index.html">Seunghwan Byun</a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="../about.html">About</a>
+        <a class="active" href="../research.html">Research</a>
+        <a href="../curriculum.html">Curriculum</a>
+        <a href="../projects.html">Projects</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </nav>
+    </header>
+
+    <main class="post-layout">
+      <article class="post-body">
+        <p class="post-meta">2026, Aug 26 · Radar / Self-Supervised Learning · Research Plan</p>
+        <h1>Radar PPI Sequence와 JEPA 기반 Sea Clutter 탐지 계획</h1>
+        <p>
+          목표는 해상 레이더의 연속 PPI 데이터를 사용해 target clutter와 sea clutter가 섞이는 상황에서
+          sea clutter를 탐지하거나 분리하는 것이다. 이 글은 아직 완성된 방법론이 아니라, 현재까지 이해한
+          접근 방향과 앞으로 검증해야 할 질문을 정리한 연구 계획이다.
+        </p>
+
+        <h2>1. 문제 정의</h2>
+        <p>
+          입력은 연속된 radar PPI image sequence다. 해상 레이더에서는 카메라처럼 고정 FPS를 먼저 생각하기보다
+          안테나 회전 속도인 RPM을 기준으로 한 바퀴 스캔 주기를 봐야 한다. 예를 들어 48 RPM이면 한 PPI가
+          약 1.25초마다 완성되고, 24 RPM이면 약 2.5초마다 완성된다.
+        </p>
+        <p>
+          출력은 문제 설정에 따라 달라진다. 첫 번째는 특정 구간에 sea clutter가 있는지 판단하는 classification
+          문제이고, 두 번째는 PPI 상에서 target과 sea clutter 영역을 분리하는 detection 또는 segmentation
+          문제다.
+        </p>
+
+        <h2>2. 왜 단일 이미지보다 시공간 문제가 되는가</h2>
+        <p>
+          Sea clutter는 한 프레임만 보면 target이나 noise와 구분이 어려울 수 있다. 중요한 정보는 한 장의
+          모양만이 아니라, 여러 스캔에 걸쳐 나타났다 사라지는 방식, 퍼지는 방식, 강도가 변하는 방식에 있다.
+        </p>
+        <p>
+          실제 target은 불규칙한 반사 변동이 있더라도 보통 시간 축에서 비교적 일관된 trajectory를 가진다.
+          반면 sea clutter는 해면 상태, 파고, 바람, grazing angle 등에 의해 통계적이고 불규칙한 시공간 패턴을
+          보일 수 있다. 따라서 이 문제는 단순 이미지 분류보다 spatio-temporal representation learning에 가깝다.
+        </p>
+
+        <h2>3. SSL 방법론 중 Generative와 Invariance-based</h2>
+        <p>
+          Generative method는 입력의 일부를 가리고 원래 데이터를 복원하도록 학습한다. 이미지에서는 MAE처럼
+          마스킹된 픽셀이나 패치를 복원하는 방식이 대표적이다. 레이더에서는 PPI의 일부 공간 또는 시간 구간을
+          가리고 복원하게 만들 수 있다.
+        </p>
+        <p>
+          Invariance-based method는 같은 데이터에서 만든 서로 다른 view가 같은 의미를 갖도록 representation을
+          가깝게 만든다. 예를 들어 같은 해상 상태에서 나온 서로 다른 시간 구간이 픽셀 모양은 달라도 비슷한
+          sea state를 가진다면, 두 sequence embedding을 가깝게 학습시킬 수 있다.
+        </p>
+
+        <h2>4. JEPA 계열로 접근하면 무엇이 다른가</h2>
+        <p>
+          I-JEPA의 핵심은 픽셀을 직접 복원하지 않고, context block으로 target block의 latent representation을
+          예측하는 것이다. 즉, 모델은 지워진 영역의 세부 픽셀 값을 그대로 그리기보다, target 영역이 가져야 할
+          의미적 표현을 맞춘다.
+        </p>
+        <p>
+          Radar PPI에 적용할 때는 이미지 한 장보다 sequence를 쓰는 V-JEPA식 접근이 더 자연스럽다. context는
+          일부 시공간 블록이고, target은 같은 sequence 안의 다른 시공간 블록이 된다. predictor는 context latent와
+          target 위치 정보를 사용해 target latent를 예측한다.
+        </p>
+
+        <h2>5. Radar PPI에서의 데이터 자르기</h2>
+        <p>
+          주행 데이터는 날짜별, 운항별로 길이가 다를 수 있다. 이때 전체 파일을 그대로 넣기보다, 각 운항 세션 안에서
+          고정 길이 window를 잘라 학습 샘플을 만든다. 중요한 것은 서로 다른 날짜나 운항이 끊기는 지점을 하나의
+          sequence로 이어 붙이지 않는 것이다.
+        </p>
+        <p>
+          RPM이 다르면 같은 프레임 수라도 실제 물리 시간이 달라진다. 따라서 학습 샘플을 만들 때 RPM을 metadata로
+          함께 보관하거나, 특정 시간 간격에 맞춰 sampling stride를 조정해야 한다. 24 RPM과 48 RPM을 무조건 같은
+          16프레임으로 취급하면 모델이 보는 시간 스케일이 달라질 수 있다.
+        </p>
+
+        <h2>6. 가능한 학습 파이프라인</h2>
+        <ul>
+          <li>운항 세션별 PPI sequence를 분리한다.</li>
+          <li>RPM, timestamp, radar setting, ego-motion 관련 metadata를 함께 정리한다.</li>
+          <li>고정 길이 clip을 sliding window로 만든다.</li>
+          <li>JEPA 방식으로 context spatio-temporal block과 target spatio-temporal block을 샘플링한다.</li>
+          <li>context encoder와 target encoder로 latent를 만들고, predictor가 target latent를 맞추도록 학습한다.</li>
+          <li>학습된 encoder를 고정한 뒤, 소량 라벨로 sea clutter classifier 또는 segmentation head를 붙인다.</li>
+        </ul>
+
+        <h2>7. 이 접근에서 조심할 점</h2>
+        <p>
+          Sea clutter가 드물게 나타나면 그 자체가 어려운 문제다. 자주 나타나는 패턴이면 모델이 통계적 구조를
+          배우기 쉽지만, 매우 희귀하거나 특정 기상/해상 조건에만 나타난다면 데이터 분포를 따로 관리해야 한다.
+        </p>
+        <p>
+          또한 레이더 PPI는 일반 RGB 이미지와 물리적 의미가 다르다. 따라서 ImageNet 기반 vision model을 그대로
+          가져와서 끝내기보다, radar PPI sequence 자체로 SSL pretraining을 하는 쪽이 더 타당하다.
+        </p>
+
+        <h2>다음 공부 질문</h2>
+        <ul>
+          <li>I-JEPA와 V-JEPA의 정확한 architecture, loss, masking strategy를 논문 기준으로 다시 정리한다.</li>
+          <li>Context block과 target block을 radar PPI에서는 어떤 크기와 시간 길이로 잡아야 할까?</li>
+          <li>Polar coordinate 상태로 학습할지, Cartesian/BEV로 변환할지 비교 실험이 필요하다.</li>
+          <li>Sea clutter 라벨은 frame-level, region-level, pixel-level 중 어떤 형태로 정의할 수 있을까?</li>
+          <li>Target과 sea clutter를 분리하려면 classification으로 충분한가, segmentation head가 필요한가?</li>
+          <li>Ego-motion compensation이 필요한 운항 데이터라면 어떤 pose source를 써야 할까?</li>
+        </ul>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <p><a href="../research.html">Back to Research</a></p>
+    </footer>
+  </body>
+</html>

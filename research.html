@@ -30,8 +30,10 @@
         <section class="side-section">
           <h2>Research</h2>
           <ul>
+            <li><a href="#state-estimation">State Estimation</a></li>
             <li><a href="#perception">Perception</a></li>
             <li><a href="#slam">SLAM</a></li>
+            <li><a href="#radar-maritime-ai">Radar / Maritime AI</a></li>
             <li><a href="#spatial-ai">Spatial AI</a></li>
             <li><a href="#vla">VLA</a></li>
           </ul>
@@ -57,17 +59,49 @@
           </p>
         </header>
 
+        <section id="state-estimation" class="archive-section">
+          <h2>State Estimation</h2>
+          <article class="post-preview">
+            <h3><a href="posts/kalman-factor-graph-study-note.html">Kalman Filter에서 Factor Graph까지</a></h3>
+            <p class="post-meta">2026, Aug 26 · State Estimation / SLAM · Study Note</p>
+            <p>P, Q, R, Kalman Gain, MSE와 가우시안 곱, SLAM factor graph의 관계를 정리합니다.</p>
+          </article>
+        </section>
+
         <section id="perception" class="archive-section">
           <h2>Perception</h2>
-          <p class="empty-note">카메라, 센서, 3D scene understanding 관련 글을 추가할 예정입니다.</p>
+          <article class="post-preview">
+            <h3><a href="posts/lidar-3d-detection-pipeline.html">LiDAR 3D Object Detection 파이프라인 이해하기</a></h3>
+            <p class="post-meta">2026, Aug 26 · Perception / SLAM · Study Note</p>
+            <p>PointPillars, VoxelNet, CenterPoint를 중심으로 LiDAR point cloud가 detection head까지 가는 흐름을 정리합니다.</p>
+          </article>
         </section>
 
         <section id="slam" class="archive-section">
           <h2>SLAM</h2>
           <article class="post-preview">
+            <h3><a href="posts/kalman-factor-graph-study-note.html">Kalman Filter에서 Factor Graph까지</a></h3>
+            <p class="post-meta">2026, Aug 26 · State Estimation / SLAM · Study Note</p>
+            <p>SLAM에서 pose, landmark, motion factor, sensor factor를 어떻게 이해할지 정리합니다.</p>
+          </article>
+          <article class="post-preview">
+            <h3><a href="posts/lidar-3d-detection-pipeline.html">LiDAR 3D Object Detection 파이프라인 이해하기</a></h3>
+            <p class="post-meta">2026, Aug 26 · Perception / SLAM · Study Note</p>
+            <p>BEV feature map, ego-motion compensation, temporal fusion을 SLAM 관점의 질문으로 연결합니다.</p>
+          </article>
+          <article class="post-preview">
             <h3><a href="posts/slam-visual-odometry-note.html">Visual Odometry 공부를 시작하며</a></h3>
             <p class="post-meta">2026, Jun 07 · SLAM · Implementation Log</p>
             <p>Visual SLAM의 첫 구현 목표와 읽을 주제를 정리합니다.</p>
+          </article>
+        </section>
+
+        <section id="radar-maritime-ai" class="archive-section">
+          <h2>Radar / Maritime AI</h2>
+          <article class="post-preview">
+            <h3><a href="posts/radar-jepa-sea-clutter-plan.html">Radar PPI Sequence와 JEPA 기반 Sea Clutter 탐지 계획</a></h3>
+            <p class="post-meta">2026, Aug 26 · Radar / Self-Supervised Learning · Research Plan</p>
+            <p>해상 레이더 PPI sequence, RPM, spatio-temporal JEPA 학습, sea clutter 탐지 문제를 연구 계획으로 정리합니다.</p>
           </article>
         </section>
 

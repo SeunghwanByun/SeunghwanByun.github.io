@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="PointPillars, VoxelNet, CenterPoint를 중심으로 LiDAR 3D Object Detection 파이프라인을 이해한 내용입니다."
+    >
+    <title>LiDAR 3D Object Detection 파이프라인 이해하기 | Seunghwan Byun</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="site-title" href="../index.html">Seunghwan Byun</a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="../about.html">About</a>
+        <a class="active" href="../research.html">Research</a>
+        <a href="../curriculum.html">Curriculum</a>
+        <a href="../projects.html">Projects</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </nav>
+    </header>
+
+    <main class="post-layout">
+      <article class="post-body">
+        <p class="post-meta">2026, Aug 26 · Perception / SLAM · Study Note</p>
+        <h1>LiDAR 3D Object Detection 파이프라인 이해하기</h1>
+        <p>
+          이 글은 PointPillars, VoxelNet, CenterPoint를 공부하면서 내가 질문하고 답변을 통해
+          이해한 부분만 정리한 기록이다. 아직 확실하지 않은 Transformer/DETR 계열 내용은 마지막에
+          다음 공부 질문으로 분리했다.
+        </p>
+
+        <h2>1. 왜 LiDAR point cloud를 바로 CNN에 넣기 어려운가</h2>
+        <p>
+          일반 이미지는 처음부터 격자 구조를 가진다. 예를 들어 RGB 이미지는 각 픽셀마다 R, G, B라는
+          고정된 3개의 값이 있고, 전체 shape도 <code>H x W x 3</code>처럼 일정하다.
+        </p>
+        <p>
+          반면 LiDAR point cloud는 점의 개수도 매번 다르고, 점들 사이에 이미지 픽셀 같은 고정된
+          이웃 구조도 없다. 각 점은 보통 <code>x, y, z, intensity</code> 같은 값을 가지지만,
+          이 점들의 집합 자체는 CNN이 바로 처리하기 좋은 정렬된 격자가 아니다.
+        </p>
+
+        <h2>2. PointPillars: 기둥을 하나의 픽셀처럼 만들기</h2>
+        <p>
+          PointPillars는 3D 공간을 BEV 기준의 2D 격자로 나눈다. 각 격자는 바닥부터 위쪽까지 이어진
+          하나의 pillar, 즉 기둥으로 생각할 수 있다. 여기까지는 이미지를 픽셀화하는 것과 비슷하게
+          이해할 수 있다.
+        </p>
+        <p>
+          중요한 점은 pillar 하나가 곧바로 픽셀 하나가 되는 것이 아니라는 점이다. 한 pillar 안에는
+          여러 LiDAR point가 들어갈 수 있다. 모델은 각 pillar마다 최대 point 개수를 정하고, 너무 많으면
+          일부를 샘플링하고 부족하면 padding을 넣어 크기를 맞춘다.
+        </p>
+        <p>
+          그 다음 PFN(Pillar Feature Net)이 pillar 내부의 point들을 하나의 feature vector로 압축한다.
+          예를 들어 pillar 하나에 point가 20개 있고, 각 point의 feature dimension이 9라면 입력은
+          대략 <code>20 x 9</code> 형태가 된다. 여기에 Linear layer, BatchNorm, ReLU 같은 연산을 적용해
+          각 point를 <code>64</code>차원 feature로 바꾼 뒤, point 축으로 max pooling을 한다.
+        </p>
+        <p>
+          결과적으로 <code>20 x 64</code>였던 정보가 <code>1 x 64</code>로 줄어든다. 이 64는 높이를
+          64등분했다는 뜻이 아니다. 모델이 학습한 추상적인 feature channel의 개수다. 이미지의 RGB가
+          사람이 정의한 3개의 색상 채널이라면, PointPillars의 64채널은 모델이 학습한 pillar의 기하학적
+          특징 채널이라고 볼 수 있다.
+        </p>
+        <p>
+          이렇게 모든 pillar를 원래 BEV 격자 위치에 다시 배치하면 <code>C x H x W</code> 형태의
+          pseudo image가 된다. 여기서부터는 2D CNN을 사용할 수 있다.
+        </p>
+
+        <h2>3. VoxelNet: 높이 방향까지 나누기</h2>
+        <p>
+          VoxelNet은 PointPillars와 다르게 높이 방향까지 포함해서 3D 공간을 voxel로 나눈다. PointPillars가
+          하나의 BEV 격자 안에서 높이 방향 정보를 처음부터 통합한다면, VoxelNet은 같은 BEV 위치 안에서도
+          여러 높이 층의 voxel을 따로 가진다.
+        </p>
+        <p>
+          VoxelNet에서도 voxel 내부 point들을 대표 feature로 압축하는 과정이 필요하다. 이 역할을 VFE
+          (Voxel Feature Encoding)가 한다. 직관적으로는 PointPillars의 PFN과 비슷하다. 작은 3D 방 하나,
+          즉 voxel 안의 point들을 모으고, 각 point를 MLP로 feature화한 뒤, pooling으로 voxel 하나를
+          대표하는 feature vector를 만든다.
+        </p>
+        <p>
+          차이는 그 다음이다. PointPillars는 PFN이 끝나면 바로 2D BEV pseudo image가 만들어진다.
+          VoxelNet 계열은 아직 <code>C x D x H x W</code> 형태의 3D feature volume을 가진다.
+          그래서 3D convolution 또는 sparse 3D convolution으로 공간 정보를 더 처리한 뒤, 높이축 정보를
+          channel 쪽으로 흡수하거나 압축해서 최종 BEV feature map을 만든다.
+        </p>
+
+        <h2>4. PointPillars와 VoxelNet의 핵심 차이</h2>
+        <ul>
+          <li>PointPillars는 처음부터 BEV의 2D pillar 격자로 만든다.</li>
+          <li>PointPillars는 PFN 이후 바로 <code>C x H x W</code> pseudo image가 된다.</li>
+          <li>VoxelNet은 높이 방향까지 나눈 3D voxel grid를 사용한다.</li>
+          <li>VoxelNet은 VFE 이후에도 3D feature volume을 가지며, 이후 3D CNN 또는 sparse 3D CNN이 필요하다.</li>
+          <li>PointPillars는 빠르지만 높이 정보가 더 일찍 압축된다.</li>
+          <li>VoxelNet 계열은 더 무겁지만 3D 구조를 더 오래 보존할 수 있다.</li>
+        </ul>
+
+        <h2>5. CenterPoint는 무엇을 새로 한 것인가</h2>
+        <p>
+          CenterPoint는 LiDAR point cloud를 feature map으로 바꾸는 앞단 전체를 새로 만든 논문이라기보다,
+          이미 만들어진 BEV feature map 위에서 object detection을 center-based 방식으로 수행하는 접근이다.
+        </p>
+        <p>
+          즉, PointPillars 방식이든 VoxelNet/SECOND 방식이든 최종적으로 BEV feature map이 만들어지면,
+          그 위에 CenterNet 스타일의 head를 붙여 물체의 중심점을 찾는다. 이때 anchor box를 미리 많이
+          깔아두는 대신, 물체 중심이 있을 위치를 heatmap으로 예측한다.
+        </p>
+        <p>
+          중심점이 잡히면 그 위치에서 box의 크기, 높이, 회전각, 속도 같은 값을 별도의 head가 예측한다.
+          여기서 head는 앞단 feature extractor가 아니라, backbone이 만든 feature map 위에 붙는 마지막
+          예측 모듈이다.
+        </p>
+
+        <h2>6. Multi-head loss는 어떻게 이해했나</h2>
+        <p>
+          하나의 3D bounding box GT는 학습 과정에서 여러 head의 정답으로 변환된다. 예를 들어 물체 중심점은
+          heatmap GT가 되고, box 크기는 size head의 GT가 되며, 회전각은 yaw 또는 sin/cos 형태의 GT가 된다.
+          속도가 있는 데이터셋에서는 velocity GT도 만들 수 있다.
+        </p>
+        <p>
+          각 head는 자기 예측값과 자기 GT를 비교해 loss를 계산한다. 이후 이 loss들을 가중합해서 total loss를
+          만들고, 그 total loss가 backpropagation을 통해 head, backbone, PFN/VFE까지 함께 업데이트한다.
+        </p>
+
+        <h2>7. Ego-motion compensation은 왜 필요한가</h2>
+        <p>
+          여러 프레임의 LiDAR나 radar 데이터를 함께 쓰려면 ego-motion compensation이 필요하다. 센서가 움직이면
+          정지해 있는 물체도 센서 기준 좌표에서는 움직이는 것처럼 보이기 때문이다.
+        </p>
+        <p>
+          그래서 과거 프레임의 point들을 현재 ego pose 기준으로 좌표 변환한 뒤, 현재 프레임과 함께 사용한다.
+          이 보상을 하지 않으면 정지 물체와 움직이는 물체를 구분하기 어려워지고, temporal feature fusion도
+          잘못된 입력을 보게 된다.
+        </p>
+        <p>
+          물론 보상은 완벽하지 않다. 차량, 로봇, 선박의 motion model은 모두 현실의 근사이며, 센서 노이즈와
+          모델 오차가 남는다. 그래도 보상하지 않는 것보다 훨씬 일관된 좌표계에서 데이터를 제공할 수 있다.
+        </p>
+
+        <h2>다음 공부 질문</h2>
+        <ul>
+          <li>SECOND의 sparse convolution과 submanifold sparse convolution은 코드 레벨에서 어떻게 다를까?</li>
+          <li>CenterPoint의 heatmap GT는 정확히 어떤 방식으로 Gaussian을 그릴까?</li>
+          <li>2-stage refinement에서 5개 point feature를 어떻게 sampling하고 box를 어떻게 refine할까?</li>
+          <li>Transformer의 self-attention과 DETR의 object query는 다시 처음부터 분리해서 공부해야 한다.</li>
+          <li>선박 motion model은 MMG, ferry model, 단순 kinematic approximation 중 어떤 수준부터 구현할 수 있을까?</li>
+        </ul>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <p><a href="../research.html">Back to Research</a></p>
+    </footer>
+  </body>
+</html>
