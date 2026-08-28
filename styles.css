@@ -276,6 +276,29 @@ code {
   color: var(--muted);
 }
 
+.post-figure {
+  margin: 26px 0;
+}
+
+.post-figure img {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.post-figure.compact img {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.post-figure figcaption {
+  margin-top: 8px;
+  color: var(--subtle);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
 .site-footer {
   max-width: 1120px;
   margin: 0 auto;
