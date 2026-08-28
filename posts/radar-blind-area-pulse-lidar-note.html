@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="해상 레이더 blind area, pulse width, FMCW, range resolution, LiDAR와 Radar raw data 차이를 정리한 학습 노트입니다."
+    >
+    <title>해상 레이더 Blind Area와 Pulse/FMCW/LiDAR 개념 정리 | Seunghwan Byun</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="site-title" href="../index.html">Seunghwan Byun</a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="../about.html">About</a>
+        <a class="active" href="../research.html">Research</a>
+        <a href="../curriculum.html">Curriculum</a>
+        <a href="../projects.html">Projects</a>
+        <a href="../roadmap.html">Roadmap</a>
+      </nav>
+    </header>
+
+    <main class="post-layout">
+      <article class="post-body">
+        <p class="post-meta">2026, Aug 28 · Radar / Sensor Physics · Study Note</p>
+        <h1>해상 레이더 Blind Area와 Pulse/FMCW/LiDAR 개념 정리</h1>
+        <p>
+          오늘 공부한 핵심은 해상 레이더에서 가까운 표적이 안 보이는 이유가 하나가 아니라는 점이다.
+          안테나 높이와 수직 빔폭 때문에 생기는 기하학적 blind area가 있고, 펄스 레이더의 송수신 전환과
+          pulse width 때문에 생기는 minimum range blind zone이 따로 있다.
+        </p>
+
+        <h2>1. Blind area를 먼저 나눠서 봐야 한다</h2>
+        <p>
+          해상 레이더의 근거리 음영은 크게 두 종류로 나눌 수 있다. 첫 번째는 전파 빔이 수면에 아직 닿지 않아
+          생기는 기하학적 blind area다. 두 번째는 펄스 송신 중 수신기를 보호하거나 송수신을 분리해야 해서
+          가까운 반사파를 받지 못하는 기술적 minimum range다.
+        </p>
+        <p>
+          그래서 range scale을 바꿨을 때 blind range가 변한다는 말은 주로 pulse mode, receiver recovery,
+          processing 조건이 바뀌는 기술적 blind range 이야기다. 반대로 안테나 높이와 vertical beam width로
+          계산되는 값은 장비 설정을 바꿔도 남는 기하학적 기준선에 가깝다.
+        </p>
+
+        <h2>2. 안테나 높이와 수직 빔폭으로 생기는 blind range</h2>
+        <p>
+          해상 레이더 안테나가 수평 방향을 중심으로 fan beam을 만든다고 보면, 수직 빔폭을 <code>theta</code>라고
+          할 때 아래쪽 half-power 경계는 대략 <code>theta / 2</code>만큼 아래를 향한다. 안테나 높이를
+          <code>h</code>라고 하면, 이 아래쪽 경계가 처음 수면과 만나는 거리까지가 근거리 기하학적 음영으로
+          근사된다.
+        </p>
+        <pre><code>D_blind = h * cot(theta / 2)</code></pre>
+        <p>
+          우리가 사용한 Furuno radar의 vertical beam width가 22도라면 <code>theta / 2 = 11도</code>이고,
+          <code>cot(11도) ~= 5.14</code>다. 따라서 기하학적 blind range는 대략 안테나 높이의 5.14배다.
+        </p>
+        <ul>
+          <li>안테나 높이 5 m: 약 25.7 m</li>
+          <li>안테나 높이 10 m: 약 51.4 m</li>
+          <li>안테나 높이 15 m: 약 77.2 m</li>
+          <li>안테나 높이 20 m: 약 102.9 m</li>
+          <li>안테나 높이 30 m: 약 154.3 m</li>
+        </ul>
+        <p>
+          중요한 표현은 "51.4m부터 안 보인다"가 아니라, "안테나 바로 아래부터 약 51.4m까지 수면 근처 표적이
+          메인 빔 아래쪽 경계 안에 들어오기 어렵다"이다. 실제 탐지 여부는 안테나 패턴, sidelobe, 설치 tilt,
+          표적 높이, RCS, 해면 상태, clutter, 신호처리에 따라 달라진다.
+        </p>
+
+        <h2>3. Pulse width는 wavelength가 아니다</h2>
+        <p>
+          주파수는 파장을 결정한다. 예를 들어 X-band 레이더의 중심 주파수가 정해져 있으면 파장도 거의 고정된다.
+          반면 pulse width는 그 주파수의 carrier wave를 얼마나 오래 켜서 내보내는지를 뜻한다.
+        </p>
+        <p>
+          즉 pulse는 파장 하나가 아니라, 같은 파장의 전파가 일정 시간 동안 이어진 전파 묶음이다. 같은 peak power로
+          더 오래 송신하면 한 pulse에 실리는 총 에너지가 커진다.
+        </p>
+        <pre><code>pulse energy ~= peak power * pulse width</code></pre>
+        <p>
+          여기서 Watt는 Joule per second다. 전기 회로 관점에서는 전압과 전류의 곱으로 볼 수 있고, 레이더 송신
+          관점에서는 단위 시간당 전자기파로 내보내는 에너지율로 이해하면 된다.
+        </p>
+
+        <h2>4. 왜 원거리에서는 긴 pulse를 쓰는가</h2>
+        <p>
+          먼 표적에서 돌아오는 echo는 매우 약하다. 같은 peak power라면 pulse width를 늘릴수록 한 번의 송신에
+          들어가는 에너지가 증가하므로, 먼 거리 왕복 후에도 수신 가능한 echo를 얻기 쉬워진다.
+        </p>
+        <p>
+          대신 전통적인 pulsed radar에서는 송신 중 수신기를 보호하거나 송수신 경로를 분리해야 한다. 그래서 펄스를
+          쏘는 동안 너무 가까운 표적에서 즉시 돌아온 echo는 놓칠 수 있다. 이상화하면 minimum range는 다음 항을
+          가진다.
+        </p>
+        <pre><code>R_min ~= c * tau / 2</code></pre>
+        <p>
+          여기서 <code>tau</code>는 pulse width다. 실제 장비에서는 여기에 duplexer recovery, receiver ringdown,
+          leakage, processing blanking 같은 항이 더 붙을 수 있다.
+        </p>
+
+        <h2>5. FMCW는 무엇이 다른가</h2>
+        <p>
+          FMCW는 frequency modulated continuous wave다. 전파를 끊어서 보내는 대신 계속 송신하면서, 시간에 따라
+          주파수를 chirp 형태로 바꾼다. 수신 신호와 현재 송신 신호의 beat frequency를 보면 왕복 시간, 즉 거리를
+          계산할 수 있다.
+        </p>
+        <p>
+          FMCW는 전통적인 pulsed radar처럼 pulse width 동안 수신기를 완전히 닫는 구조와 다르다. 하지만 이것이
+          "근거리 한계가 전혀 없다"는 뜻은 아니다. 송신 누설, Tx/Rx isolation, ADC dynamic range, near-field,
+          clutter, leakage cancellation 성능이 가까운 거리 탐지 한계를 만든다.
+        </p>
+        <p>
+          해상용 레이더도 모두 한 종류는 아니다. 전통적인 magnetron pulse radar, solid-state pulse compression
+          radar, FMCW 또는 broadband 계열 장비가 섞여 있다. 따라서 특정 Furuno 장비가 어떤 방식인지는 모델별
+          사양으로 확인해야 한다.
+        </p>
+
+        <h2>6. Range resolution을 다시 정의하기</h2>
+        <p>
+          Range resolution은 "센서가 앞뒤 거리 방향으로 가까이 붙은 두 표적을 두 개로 분리할 수 있는 최소 간격"이다.
+          레이더에서는 waveform bandwidth가 핵심이다. FMCW나 pulse compression처럼 대역폭 <code>B</code>를
+          사용하는 경우 일반적으로 다음처럼 근사한다.
+        </p>
+        <pre><code>delta_R ~= c / (2 * B)</code></pre>
+        <p>
+          단순 uncompressed pulse에서는 pulse width가 길수록 두 표적 echo가 시간축에서 겹치기 때문에
+          <code>delta_R ~= c * tau / 2</code>로 이해할 수 있다. 그래서 레이더 raw data는 보통 FFT나 matched
+          filtering 이후 range bin 형태로 나타난다.
+        </p>
+
+        <h2>7. LiDAR에는 range resolution이 없는 것처럼 느껴지는 이유</h2>
+        <p>
+          LiDAR에도 range resolution이나 range precision은 존재한다. 다만 raw output이 보통 <code>x, y, z</code>
+          point cloud로 나오기 때문에 bin 단위 데이터처럼 보이지 않는다. LiDAR는 빛을 특정 방향으로 쏘고, 돌아오는
+          시간을 직접 측정한 뒤, 발사 방향과 거리를 조합해 좌표를 만든다.
+        </p>
+        <p>
+          반면 레이더는 넓은 RF beam으로 공간을 비추고, 돌아온 신호를 range, Doppler, angle 방향으로 신호처리해
+          분해한다. 그래서 raw 또는 low-level radar data는 range bin, Doppler bin, angle bin 구조로 나타나는 일이
+          많다. 차량용 radar도 본질적으로 range-Doppler-angle processing을 거쳐 point detection이나 object list를
+          만든다.
+        </p>
+
+        <h2>8. LiDAR 하드웨어 방식도 하나가 아니다</h2>
+        <p>
+          LiDAR와 Radar는 신호 획득 메커니즘이 다르지만, LiDAR 내부 방식도 여러 갈래가 있다. Flash LiDAR는 넓게
+          illumination하고 pixelated receiver가 각 방향의 시간을 재는 방식에 가깝다. Scanning LiDAR는 하나 또는
+          소수의 beam을 MEMS mirror, polygon mirror, galvo mirror, optical phased array 같은 방식으로 빠르게
+          조향해 공간을 채운다.
+        </p>
+        <p>
+          그래서 "solid-state LiDAR"라는 표현은 주의해서 읽어야 한다. 완전히 움직이는 부품이 없는 flash/OPA 계열도
+          있고, 외형은 고정되어 있지만 내부에 MEMS 같은 미세 구동부가 있는 hybrid solid-state 계열도 있다.
+        </p>
+
+        <h2>내가 이해한 부분</h2>
+        <ul>
+          <li>Pulse width는 파장이 아니라 carrier wave를 켜 두는 시간이다.</li>
+          <li>Pulse energy는 peak power와 pulse width의 곱으로 볼 수 있다.</li>
+          <li>해상 레이더 blind area는 안테나 기하와 펄스/수신기 동작을 분리해서 봐야 한다.</li>
+          <li>Vertical beam width 22도, 안테나 높이 10 m이면 기하학적 근거리 blind range는 약 51.4 m다.</li>
+          <li>FMCW는 주파수를 변조하는 연속파 방식이지만, 실제 근거리 한계는 isolation과 leakage 같은 구현 문제로 남는다.</li>
+          <li>LiDAR는 point cloud로 출력되고 Radar는 bin 기반으로 느껴지는 이유가 신호 획득과 처리 구조 차이에 있다.</li>
+        </ul>
+
+        <h2>다음 공부 질문</h2>
+        <ul>
+          <li>사용한 Furuno radar의 정확한 모델명 기준으로 pulse, pulse compression, FMCW 여부를 확인한다.</li>
+          <li>Range scale별 pulse width, PRF, receiver blanking spec을 실제 매뉴얼에서 확인한다.</li>
+          <li>Vertical beam pattern의 half-power edge와 실제 탐지 한계가 얼마나 다른지 실측 데이터로 비교한다.</li>
+          <li>PPI raw data의 range bin 크기와 장비 spec의 range resolution이 일치하는지 확인한다.</li>
+          <li>Sea clutter 탐지 모델에 range bin, RPM, range scale, antenna height metadata를 함께 넣을지 검토한다.</li>
+        </ul>
+      </article>
+    </main>
+
+    <footer class="site-footer">
+      <p><a href="../research.html">Back to Research</a></p>
+    </footer>
+  </body>
+</html>
