@@ -128,9 +128,67 @@
           곱을 더한 값이 된다. 이 관계를 행렬로 쓰면 상태 전이 행렬 <code>A</code>를 통해 이전 상태를 현재 예측 상태로
           바꿀 수 있다.
         </p>
-        <figure class="post-figure"><img src="../assets/kalman-filter-study-diagrams/slide-27.png" alt="위치와 속도의 관계로 등속도 예측 시스템을 설계하는 그림"><figcaption>속도는 위치의 변화량이라는 관계를 상태 모델에 넣는다.</figcaption></figure>
-        <figure class="post-figure"><img src="../assets/kalman-filter-study-diagrams/slide-28.png" alt="등속도 모델의 상태 전이 행렬 전개 그림"><figcaption>위치와 속도를 상태 벡터로 묶어 전이 행렬을 구성한다.</figcaption></figure>
-        <figure class="post-figure"><img src="../assets/kalman-filter-study-diagrams/slide-29.png" alt="예측 시스템을 상태에 적용하는 그림"><figcaption>설계한 예측 시스템을 이전 상태에 적용한다.</figcaption></figure>
+        <p>
+          속도는 위치의 변화량으로 정의할 수 있다. 이전 위치를 <code>p_{k-1}</code>, 현재 위치를 <code>p_k</code>,
+          시간 간격을 \(\Delta t\)라고 하면 다음과 같다.
+        </p>
+        <div class="math-display">\[ v_k = \frac{p_k - p_{k-1}}{\Delta t}, \qquad p_k = p_{k-1} + v_k\Delta t \]</div>
+        <p>
+          등속도 모델에서는 과거의 속도와 현재의 속도가 같다고 가정한다.
+        </p>
+        <div class="math-display">\[ v_k = v_{k-1} \]</div>
+        <p>
+          위치와 속도를 하나의 상태 벡터로 묶으면, 등속도 시스템은 다음과 같은 행렬식으로 표현할 수 있다.
+          이때 <code>A</code>가 예측 시스템이고, 오른쪽의 상태 벡터가 과거 상태다.
+        </p>
+        <div class="math-display">\[
+          \begin{bmatrix} p_k \\ v_k \end{bmatrix}
+          =
+          \begin{bmatrix} 1 & \Delta t \\ 0 & 1 \end{bmatrix}
+          \begin{bmatrix} p_{k-1} \\ v_{k-1} \end{bmatrix},
+          \qquad
+          \mathbf{A} = \begin{bmatrix} 1 & \Delta t \\ 0 & 1 \end{bmatrix}
+        \]</div>
+        <p>
+          이제 상태를 추정값으로 쓰면, k-1 시점의 추정 상태는
+          \(\hat{\mathbf{x}}_{k-1} = [p_{k-1}, v_{k-1}]^T\)이고 예측된 현재 상태는 다음과 같다.
+        </p>
+        <div class="math-display">\[ \hat{\mathbf{x}}_k^- = \mathbf{A}\hat{\mathbf{x}}_{k-1} \]</div>
+        <p>
+          상태값은 하나의 확정된 점이 아니라 Gaussian 분포를 따른다고 가정한다. 따라서 상태의 평균은 추정 상태이고,
+          공분산 행렬은 위치와 속도의 불확실성 및 두 변수 사이의 상관관계를 담는다.
+        </p>
+        <div class="math-display">\[
+          \mathbf{P} =
+          \begin{bmatrix}
+            \Sigma_{pp} & \Sigma_{pv} \\
+            \Sigma_{vp} & \Sigma_{vv}
+          \end{bmatrix}
+        \]</div>
+        <p>
+          \(\Sigma_{pp}\)는 위치의 분산, \(\Sigma_{vv}\)는 속도의 분산이며,
+          \(\Sigma_{pv}\)와 \(\Sigma_{vp}\)는 위치와 속도 사이의 공분산이다.
+          예측 시스템을 상태에 적용하면 공분산은 선형 변환의 성질에 따라 <code>A P A^T</code>로 변환된다.
+        </p>
+        <div class="math-display">\[
+          \begin{aligned}
+            \mathbf{P}
+            &= \operatorname{Cov}(\hat{\mathbf{x}}) \\
+            &= \mathbb{E}\left[(\hat{\mathbf{x}}-\mathbb{E}[\hat{\mathbf{x}}])
+              (\hat{\mathbf{x}}-\mathbb{E}[\hat{\mathbf{x}}])^{\mathsf{T}}\right] \\
+            \operatorname{Cov}(\mathbf{A}\hat{\mathbf{x}})
+            &= \mathbf{A}\mathbf{P}\mathbf{A}^{\mathsf{T}}
+          \end{aligned}
+        \]</div>
+        <p>
+          그러므로 process noise를 아직 추가하지 않은 prediction은 다음 두 식으로 정리된다.
+          첫 번째 식은 상태 평균을 이동시키고, 두 번째 식은 그 상태의 불확실성을 시스템 행렬에 맞춰 전파한다.
+        </p>
+        <div class="math-display">\[
+          \hat{\mathbf{x}}_k^- = \mathbf{A}\hat{\mathbf{x}}_{k-1},
+          \qquad
+          \mathbf{P}_k^- = \mathbf{A}\mathbf{P}_{k-1}\mathbf{A}^{\mathsf{T}} + \mathbf{Q}
+        \]</div>
         <p>
           초기 위치에서 prediction을 시작하면 평균은 모델이 예상한 위치로 이동한다. 동시에 예측 분포는 넓어진다.
           시스템이 진행되는 동안 모델이 설명하지 못하는 오차가 새로 더해지기 때문이다.
