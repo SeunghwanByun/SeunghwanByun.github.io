@@ -282,6 +282,13 @@ code {
   color: var(--muted);
 }
 
+.math-display {
+  margin: 24px 0;
+  overflow-x: auto;
+  text-align: center;
+  color: var(--ink);
+}
+
 .post-figure {
   margin: 28px 0;
 }
