@@ -3,17 +3,11 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta
-      name="description"
-      content="Kalman Filter를 공부하며 이해한 재귀 추정, prediction, update, Gaussian, Bayesian filter, P/Q/R 공분산, Kalman gain, 속도 추정 내용을 정리한 글입니다."
-    >
-    <title>Kalman Filter 이해 정리 | Seunghwan Byun</title>
+    <meta name="description" content="발표 자료의 14~50페이지를 바탕으로 Kalman Filter의 재귀 추정, 예측, 측정, Gaussian 분포, Bayes update, Kalman gain, 속도 추정을 페이지별로 정리한 공부 기록입니다.">
+    <title>Kalman Filter 공부 기록 | Seunghwan Byun</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    >
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles.css">
   </head>
   <body>
@@ -30,336 +24,351 @@
 
     <main class="post-layout">
       <article class="post-body">
-        <p class="post-meta">2026, Aug 28 · State Estimation / Tracking · Study Note</p>
-        <h1>Kalman Filter 이해 정리</h1>
+        <p class="post-meta">2026, Aug 30 · State Estimation / Tracking · Study Note</p>
+        <h1>Kalman Filter 공부 기록</h1>
         <p>
-          이 글은 내가 Kalman Filter를 공부하면서 정리한 이해를 다시 글로 풀어쓴 것이다.
-          핵심은 Kalman Filter를 단순한 smoothing filter가 아니라,
-          <strong>불확실한 상태를 Gaussian으로 표현하고, 예측과 측정을 반복해서 결합하는 재귀적 Bayesian state estimator</strong>로
-          이해하는 것이다.
+          이 글은 Kalman Filter를 공부하며 만든 발표 자료의 14~50페이지를 페이지 순서대로 옮긴 기록이다.
+          위치와 속도를 상태로 두고, 이전 추정 상태를 이용해 다음 상태를 예측한 뒤 새로운 측정값으로 보정하는
+          Kalman Filter의 흐름을 직접 이해하는 것이 목표였다.
         </p>
         <p>
-          발표자료의 14-50페이지 흐름을 기준으로, 재귀 필터의 개념, 초기 상태, prediction, process noise,
-          measurement noise, Bayes update, Gaussian product, Kalman gain, 그리고 위치 측정만으로 속도를 추정하는
-          원리까지 순서대로 정리한다.
+          여기서 중요한 것은 단순히 공식을 외우는 것이 아니다. 실제 상태는 직접 알 수 없고, motion model도 완벽하지
+          않으며, LiDAR 같은 센서 측정에도 오차가 있다. Kalman Filter는 이 불확실성을 확률 분포로 표현하고,
+          prediction과 update를 반복하면서 현재 상태에 대한 추정을 갱신한다.
         </p>
-
-        <h2>1. Kalman Filter는 왜 재귀 필터인가</h2>
         <p>
-          재귀적이라는 말은 현재 시점의 값을 이전 시점의 결과로부터 다시 계산한다는 뜻이다. Kalman Filter는
-          모든 과거 measurement를 매번 처음부터 다시 풀지 않는다. 대신 직전 시점까지의 추정 결과를 하나의 요약된
-          상태로 들고 있다가, 새로운 측정값이 들어오면 그 정보만 추가해서 현재 상태를 갱신한다.
-        </p>
-        <pre><code>previous estimate + new measurement -> current estimate</code></pre>
-        <p>
-          여기서 previous estimate는 단순한 위치값 하나가 아니다. 상태의 평균과 오차 공분산을 함께 가진다.
-          즉 "내가 보기에 현재 위치는 여기쯤이다"와 "그 추정이 얼마나 불확실한가"를 같이 들고 다음 step으로 넘어간다.
+          아래 이미지는 발표 자료의 각 페이지 전체를 그대로 사용한 것이다. 원본에 포함된 회사 로고와 문서 푸터는
+          학습 내용과 무관하여 제거했고, 도식과 그래프는 페이지 구성 그대로 보존했다.
         </p>
 
-        <h2>2. 첫 관측과 초기 상태</h2>
-        <p>
-          처음 객체가 관측되면 아직 과거 정보가 충분하지 않다. 그래서 구현에서는 첫 measurement를 초기 위치로 놓고,
-          속도는 0 또는 초기 두 프레임의 차분값으로 둔다. 동시에 초기 공분산 <code>P_0</code>를 정해야 한다.
-        </p>
-        <p>
-          중요한 점은 초기 상태가 "정답"이라는 뜻이 아니라는 것이다. 첫 관측값도 measurement noise를 가진다.
-          따라서 초기 상태는 첫 관측을 기반으로 한 첫 번째 믿음이고, 이후 measurement가 들어오면서 점점 보정된다.
-        </p>
-        <pre><code>x_0 = [position_0, velocity_0]^T
-P_0 = initial estimation uncertainty</code></pre>
-        <p>
-          "첫 관측에서는 추정하지 않는다"는 표현은 실무 구현 관점의 설명으로는 괜찮다. 더 엄밀하게는 첫 관측으로
-          posterior를 초기화한다고 볼 수 있다. 그 다음 관측부터 prediction과 update loop가 본격적으로 돈다.
-        </p>
-
-        <h2>3. 상태는 시스템의 구성 요소다</h2>
-        <p>
-          Kalman Filter에서 상태 <code>x</code>는 추정하고 싶은 물리량을 모은 벡터다. Tracking에서 객체의 속도를
-          안정적으로 알고 싶다면 위치만 상태로 둘 수 없다. 위치와 속도를 같이 상태로 둬야 한다.
-        </p>
-        <pre><code>x = [p, v]^T</code></pre>
-        <p>
-          2D tracking이면 상태는 더 커질 수 있다.
-        </p>
-        <pre><code>x = [px, py, vx, vy]^T</code></pre>
-        <p>
-          3D라면 <code>pz</code>, <code>vz</code>도 들어갈 수 있고, 객체의 크기, yaw, yaw rate까지 상태에 넣는
-          추적기도 있다. 무엇을 상태로 둘지는 "무엇을 추정하고 싶은가"와 "어떤 motion model을 쓸 것인가"에 따라
-          결정된다.
-        </p>
-
-        <h2>4. 등속도 모델: 위치와 속도의 관계를 시스템으로 만든다</h2>
-        <p>
-          발표자료에서 사용한 핵심 motion model은 등속도 모델이다. 등속도 모델은 짧은 시간 동안 객체의 속도가
-          유지된다고 가정한다. 1D 상태가 <code>[p, v]</code>라면 다음처럼 쓸 수 있다.
-        </p>
-        <pre><code>p_k = p_{k-1} + dt * v_{k-1}
-v_k = v_{k-1}</code></pre>
-        <p>
-          이를 행렬로 쓰면 다음과 같다.
-        </p>
-        <pre><code>[p_k]   [1  dt] [p_{k-1}]
-[v_k] = [0   1] [v_{k-1}]</code></pre>
-        <p>
-          여기서 <code>A</code>가 예측 시스템이다. Kalman Filter의 prediction은 결국 이전 상태를 이 시스템에
-          통과시켜 현재 상태를 예측하는 과정이다.
-        </p>
-        <pre><code>x_k^- = A x_{k-1}</code></pre>
-
-        <h2>5. 예측 시스템은 항상 틀릴 수 있다</h2>
-        <p>
-          등속도 모델은 유용하지만 현실을 완벽하게 설명하지 못한다. 실제 객체는 가속할 수 있고, 갑자기 감속할 수도
-          있고, 선회할 수도 있다. 센서 frame 사이에서 객체가 의도치 않게 방향을 바꾸거나 관측 자체가 흔들릴 수도 있다.
-        </p>
-        <p>
-          그래서 prediction은 항상 불확실성을 가진다. 이 불확실성을 process noise로 두고, 그 공분산을
-          <code>Q</code>라고 한다. <code>Q</code>는 "내 motion model이 어느 정도 틀릴 수 있는가"를 수치화한 것이다.
-        </p>
-
-        <figure class="post-figure compact">
-          <img src="../assets/kalman-filter-study-note/image61.png" alt="예측 시스템의 불확실성을 표현한 Gaussian 도식">
-          <figcaption>예측 시스템은 실제 움직임을 완벽히 반영하지 못하므로 process noise를 둔다.</figcaption>
-        </figure>
-
-        <h2>6. Gaussian으로 불확실성을 표현한다</h2>
-        <p>
-          Kalman Filter는 상태의 불확실성을 Gaussian distribution으로 표현한다. 여기서 평균은 가장 그럴듯한 상태이고,
-          분산 또는 공분산은 그 상태가 얼마나 흔들릴 수 있는지를 나타낸다.
-        </p>
-        <ul>
-          <li>평균이 이동하면 추정 위치가 이동한다.</li>
-          <li>분산이 커지면 불확실성이 커진다.</li>
-          <li>분산이 작아지면 더 확신하는 추정이 된다.</li>
-        </ul>
-        <p>
-          상태가 1차원이면 Gaussian은 종 모양 곡선으로 그릴 수 있다. 상태가 여러 변수로 이루어지면 다변량 Gaussian이
-          되고, 이때 공분산 행렬이 각 변수의 불확실성과 변수 간 상관관계를 함께 표현한다.
-        </p>
-
-        <figure class="post-figure compact">
-          <img src="../assets/kalman-filter-study-note/image68.png" alt="Gaussian 분포의 평균과 분산 도식">
-          <figcaption>Gaussian에서 평균은 가장 가능성 높은 값, 분산은 불확실성의 크기를 나타낸다.</figcaption>
-        </figure>
-
-        <h2>7. P, Q, R을 구분해야 한다</h2>
-        <p>
-          Kalman Filter를 공부할 때 가장 헷갈리는 부분은 공분산 기호들이다. 내 이해를 기준으로 정리하면 다음과 같다.
-        </p>
-        <ul>
-          <li><code>P</code>: 현재 추정 상태의 오차 공분산이다. 내가 가진 추정값이 실제 상태에서 얼마나 틀릴 수 있는지를 나타낸다.</li>
-          <li><code>Q</code>: process noise covariance다. motion model을 따라 예측할 때 새로 추가되는 불확실성이다.</li>
-          <li><code>R</code>: measurement noise covariance다. 센서 또는 detection 결과가 얼마나 틀릴 수 있는지를 나타낸다.</li>
-        </ul>
-        <p>
-          그래서 <code>Q</code>를 "상태의 공분산"이라고 부르면 헷갈린다. 상태 추정의 현재 불확실성은 <code>P</code>이고,
-          <code>Q</code>는 prediction 단계에서 <code>P</code>에 더해지는 모델 불확실성이다.
-        </p>
-
-        <h2>8. Prediction에서 평균과 공분산이 어떻게 변하는가</h2>
-        <p>
-          Prediction 단계는 두 줄로 요약된다.
-        </p>
-        <pre><code>x_k^- = A x_{k-1}
-P_k^- = A P_{k-1} A^T + Q</code></pre>
-        <p>
-          첫 줄은 평균의 예측이다. 이전 상태 평균이 motion model을 따라 현재 위치로 이동한다.
-          두 번째 줄은 불확실성의 예측이다. 이전 추정 불확실성이 시스템 행렬을 타고 전파되고, 여기에 process noise
-          <code>Q</code>가 더해진다.
-        </p>
-        <p>
-          발표자료에서 말한 "예측 후 Gaussian이 넓어진다"는 설명은 이 수식과 연결된다. 예측은 미래를 맞히는 행위라서
-          시간이 갈수록 불확실성이 커지는 것이 자연스럽다.
-        </p>
-
-        <figure class="post-figure">
-          <img src="../assets/kalman-filter-study-note/image142.png" alt="초기 위치의 Gaussian 분포 도식">
-          <figcaption>초기 상태도 하나의 점이 아니라 불확실성을 가진 분포로 볼 수 있다.</figcaption>
-        </figure>
-
-        <figure class="post-figure">
-          <img src="../assets/kalman-filter-study-note/image150.png" alt="예측 위치와 Q에 의해 넓어진 Gaussian 분포 도식">
-          <figcaption>예측 시스템을 통과하면 평균은 이동하고, Q가 더해져 불확실성이 커진다.</figcaption>
-        </figure>
-
-        <h2>9. "Gaussian 분포의 합"을 더 정확히 이해하기</h2>
-        <p>
-          발표자료의 직관처럼 Gaussian과 Gaussian을 더하면 Gaussian이 된다는 말은 맞는 방향이다. 다만 여기서
-          더한다는 것은 확률밀도함수 값을 그냥 더한다는 뜻이 아니다. 더 정확히는 Gaussian random variable에
-          독립 Gaussian noise가 더해지면 결과 random variable도 Gaussian이라는 뜻이다.
-        </p>
-        <pre><code>x_k = A x_{k-1} + w
-w ~ N(0, Q)</code></pre>
-        <p>
-          이때 <code>x_{k-1}</code>의 불확실성과 <code>w</code>의 불확실성이 합쳐지므로 covariance가 커진다.
-          그래서 prediction covariance 식에 <code>+ Q</code>가 붙는다.
-        </p>
-
-        <figure class="post-figure">
-          <img src="../assets/kalman-filter-study-note/image148.png" alt="두 Gaussian random variable의 합을 설명하는 도식">
-          <figcaption>Prediction에서의 합은 상태 random variable과 process noise random variable의 합으로 이해하는 것이 정확하다.</figcaption>
-        </figure>
-
-        <h2>10. Measurement도 불확실하다</h2>
-        <p>
-          센서가 준 측정값도 정답이 아니다. LiDAR, camera, radar, detector output 모두 오차를 가진다.
-          따라서 measurement도 하나의 Gaussian likelihood로 볼 수 있다. 측정값 자체가 평균이고, measurement noise
-          covariance <code>R</code>이 그 측정의 불확실성을 나타낸다.
-        </p>
-        <pre><code>z_k = H x_k + v
-v ~ N(0, R)</code></pre>
-        <p>
-          <code>H</code>는 상태를 measurement space로 보내는 행렬이다. 예를 들어 상태가
-          <code>[position, velocity]</code>인데 센서는 position만 측정한다면, <code>H</code>는 position 성분만
-          꺼내는 역할을 한다.
-        </p>
-
-        <figure class="post-figure">
-          <img src="../assets/kalman-filter-study-note/image175.png" alt="예측 상태 분포와 측정값 분포가 함께 있는 도식">
-          <figcaption>Update 직전에는 prediction으로 만든 prior와 measurement가 만든 likelihood가 함께 존재한다.</figcaption>
-        </figure>
-
-        <h2>11. Bayes Filter 관점</h2>
-        <p>
-          Kalman Filter의 update는 Bayes rule로 이해할 수 있다. 이전 시점의 posterior는 현재 시점 prediction을 거쳐
-          prior가 되고, 새 measurement가 들어오면 likelihood와 결합해 새로운 posterior를 만든다.
-        </p>
-        <pre><code>posterior = normalization * likelihood * prior</code></pre>
-        <p>
-          이 구조가 중요한 이유는 measurement를 무조건 믿지 않는다는 점이다. 이미 가지고 있던 prior와 새 measurement
-          likelihood의 상대적 불확실성을 보고, 둘 사이의 적절한 위치로 posterior를 만든다.
-        </p>
+        <h2>발표 자료의 흐름</h2>
         <ol>
-          <li>이전 posterior를 motion model로 예측한다.</li>
-          <li>예측 결과가 현재 prior가 된다.</li>
-          <li>새 measurement를 likelihood로 해석한다.</li>
-          <li>prior와 likelihood를 곱해 현재 posterior를 만든다.</li>
+          <li>14~20페이지: Kalman Filter의 재귀적 추정</li>
+          <li>21~32페이지: prediction system, Gaussian 분포, process noise</li>
+          <li>33~48페이지: measurement, Bayes filter, Gaussian product, Kalman gain</li>
+          <li>49~50페이지: 위치와 속도를 함께 추정하는 상태 공간</li>
         </ol>
 
-        <h2>12. Gaussian의 곱과 update의 의미</h2>
+        <h2>Page 14. Kalman Filter는 재귀 필터다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-14.png" alt="Kalman Filter가 이전 추정 상태와 현재 측정 위치를 이용해 현재 추정 상태를 출력하는 재귀 구조"><figcaption>이전 추정 상태와 현재 측정 위치를 Kalman Filter에 넣어 현재의 추정 위치와 추정 속도를 얻는다.</figcaption></figure>
         <p>
-          Gaussian prior와 Gaussian likelihood를 곱하면 다시 Gaussian 형태가 된다. 두 분포가 같은 정보를 서로 다른
-          불확실성으로 말하고 있다고 보면, 곱한 결과는 두 정보를 모두 반영한 새로운 믿음이다.
-        </p>
-        <p>
-          이때 새 평균은 더 작은 분산을 가진 분포 쪽에 더 가까워진다. 예측이 더 확실하면 예측 쪽에 가까워지고,
-          measurement가 더 확실하면 measurement 쪽에 가까워진다. 새 분산은 정보가 결합되었기 때문에 더 작아진다.
+          Kalman Filter는 재귀 필터의 한 종류다. 재귀적이라는 말은 k번째 결과를 계산할 때 모든 과거 데이터를
+          처음부터 다시 사용하지 않고, k-1번째까지의 정보를 요약한 추정 상태와 k번째 측정값을 사용한다는 뜻이다.
+          이 구조 덕분에 데이터가 계속 들어와도 매 순간 같은 형태의 계산을 반복할 수 있다.
         </p>
 
-        <figure class="post-figure">
-          <img src="../assets/kalman-filter-study-note/image204.png" alt="두 Gaussian 분포의 곱으로 더 좁은 posterior가 만들어지는 도식">
-          <figcaption>Gaussian prior와 Gaussian likelihood의 곱은 더 좁은 posterior로 정리된다.</figcaption>
-        </figure>
-
-        <figure class="post-figure">
-          <img src="../assets/kalman-filter-study-note/image218.png" alt="예측 분포와 측정 분포의 곱으로 추정 상태 분포가 만들어지는 도식">
-          <figcaption>Kalman update는 예측 상태 분포와 측정값 분포를 결합해 추정 상태 분포를 계산하는 과정이다.</figcaption>
-        </figure>
-
-        <h2>13. Kalman Gain은 무엇을 결정하는가</h2>
+        <h2>Page 15. 첫 번째 관측과 초기 상태</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-15.png" alt="첫 번째 관측 위치를 Kalman Filter의 초기 상태로 사용하는 과정"><figcaption>첫 번째 관측에서는 측정 위치를 초기 상태로 삼는다.</figcaption></figure>
         <p>
-          Kalman gain은 prediction과 measurement 사이에서 measurement residual을 얼마나 반영할지 결정하는 동적
-          가중치다.
-        </p>
-        <pre><code>K_k = P_k^- H^T (H P_k^- H^T + R)^-1</code></pre>
-        <p>
-          Update 식은 다음처럼 쓴다.
-        </p>
-        <pre><code>x_hat_k = x_hat_k^- + K_k (z_k - H x_hat_k^-)</code></pre>
-        <p>
-          괄호 안의 <code>z_k - H x_hat_k^-</code>는 innovation 또는 residual이다. 내가 예측한 measurement와
-          실제 measurement가 얼마나 다른지를 나타낸다. Kalman gain은 이 차이를 상태에 얼마나 반영할지 정한다.
-        </p>
-        <ul>
-          <li><code>P_k^-</code>가 크면 예측이 불확실하므로 measurement를 더 반영한다.</li>
-          <li><code>R</code>이 크면 measurement가 불확실하므로 measurement를 덜 반영한다.</li>
-          <li><code>K</code>는 low-pass filter의 고정 alpha와 비슷하지만, 매 step 공분산에 따라 자동으로 계산된다.</li>
-        </ul>
-
-        <h2>14. 오차 공분산 update</h2>
-        <p>
-          상태 평균을 update한 뒤에는 공분산도 update한다. 가장 단순한 형태는 다음과 같다.
-        </p>
-        <pre><code>P_k = (I - K_k H) P_k^-</code></pre>
-        <p>
-          이 식은 measurement를 반영한 뒤 추정 불확실성이 줄어든다는 의미를 가진다. 하지만 실제 구현에서는 수치적
-          안정성을 위해 Joseph form을 쓰기도 한다.
-        </p>
-        <pre><code>P_k = (I - K H) P_k^- (I - K H)^T + K R K^T</code></pre>
-        <p>
-          발표나 공부 단계에서는 단순 형태로 직관을 잡고, 구현 단계에서는 covariance가 대칭성과 양의 준정부호성을
-          유지하는지 확인하는 것이 좋다.
+          첫 관측 시점에는 이전 추정 상태가 없으므로, 보통 첫 번째 측정 위치를 초기 상태로 사용한다. 이 시점에는
+          두 개의 정보를 결합해 보정하는 update가 아직 일어나지 않는다. 실질적인 재귀 추정은 두 번째 관측부터 시작한다.
         </p>
 
-        <h2>15. 1D 위치 추정에서 2D 상태 추정으로</h2>
+        <h2>Page 16. 두 번째 관측에서 과거 상태가 된다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-16.png" alt="첫 번째 관측의 초기 상태가 두 번째 관측 시점에서 과거 상태가 되는 과정"><figcaption>시간이 한 단계 진행되면 첫 번째 상태는 과거 상태가 된다.</figcaption></figure>
         <p>
-          위치 하나만 추정한다면 1D Gaussian으로 설명할 수 있다. 하지만 속도까지 추정하려면 상태가 최소 2차원이 된다.
-          이때 Gaussian은 곡선 하나가 아니라 타원 또는 다변량 분포가 된다.
-        </p>
-        <p>
-          공분산이 0이면 위치 오차와 속도 오차가 서로 독립에 가깝다. 공분산이 0이 아니면 한쪽 오차가 다른 쪽 오차와
-          같이 움직이는 상관관계가 생긴다. Kalman Filter가 위치 measurement만으로도 속도를 update할 수 있는 이유가
-          이 공분산 구조에 있다.
+          두 번째 관측 시점에 도달하면 첫 번째 관측으로 만든 초기 상태는 과거 상태가 된다. 이 과거 상태는 새 측정값과
+          결합되기 전에 먼저 현재 시점까지 이동해야 한다. 이 이동을 수학적으로 표현하는 것이 prediction이다.
         </p>
 
-        <figure class="post-figure compact">
-          <img src="../assets/kalman-filter-study-note/image233.png" alt="2차원 Gaussian 분포 예시">
-          <figcaption>상태가 위치와 속도처럼 여러 변수로 확장되면 Gaussian은 공분산 구조를 가진 다변량 분포가 된다.</figcaption>
-        </figure>
-
-        <h2>16. 속도 추정은 위치와 속도의 관계에서 나온다</h2>
+        <h2>Page 17. 새로운 현재 위치 측정</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-17.png" alt="두 번째 관측 시점에서 새로운 현재 위치를 측정하는 과정"><figcaption>새로운 관측은 현재 위치에 대한 측정값을 제공한다.</figcaption></figure>
         <p>
-          센서가 위치만 측정한다고 해서 속도를 절대 추정할 수 없는 것은 아니다. 등속도 모델 안에서 위치와 속도는
-          서로 연결되어 있다. 속도는 다음 위치 예측에 영향을 주고, 측정 위치와 예측 위치의 차이는 속도 추정에도
-          영향을 준다.
-        </p>
-        <p>
-          따라서 update에서 residual이 발생하면, Kalman gain의 위치 성분만 바뀌는 것이 아니라 속도 성분도 같이
-          바뀔 수 있다. 이것이 단순 차분보다 Kalman Filter 기반 속도 추정이 안정적인 이유다.
-        </p>
-        <pre><code>x = [p, v]^T
-z = measured position
-residual = z - predicted position
-update changes both p and v through K</code></pre>
-
-        <h2>17. 이 이해가 MOT에서 중요한 이유</h2>
-        <p>
-          Multi-object tracking에서 Kalman Filter는 단독으로 모든 문제를 해결하지 않는다. Detection, association,
-          filtering, track management가 함께 돌아간다. 그래도 Kalman Filter는 "현재 객체가 어디에 있을 것 같은지"를
-          예측하고, measurement가 들어왔을 때 그 차이를 합리적으로 반영하는 중심 역할을 한다.
-        </p>
-        <ul>
-          <li>Prediction은 다음 frame에서 객체가 있을 법한 위치를 만든다.</li>
-          <li>이 예측 위치는 data association의 gating 기준으로 쓰일 수 있다.</li>
-          <li>Update는 연결된 measurement를 반영해 상태를 보정한다.</li>
-          <li>Velocity state는 다음 prediction의 품질을 결정한다.</li>
-        </ul>
-        <p>
-          따라서 속도 추정을 안정화하려면 Kalman Filter의 수식뿐 아니라 measurement point 정의, association 품질,
-          detector noise, object motion model을 함께 봐야 한다.
+          현재 시점에는 센서가 새 측정 위치를 제공한다. 하지만 측정값은 정답 그 자체가 아니다. LiDAR 검출점이나 다른
+          센서의 측정에는 노이즈가 있으므로, 이 값을 그대로 현재 상태로 확정하지 않고 motion model의 예측과 함께 사용한다.
         </p>
 
-        <h2>18. 내가 고쳐 이해한 표현들</h2>
-        <ul>
-          <li><code>Q</code>는 상태 추정 공분산이 아니라 process noise covariance다. 상태 추정의 공분산은 <code>P</code>다.</li>
-          <li>Prediction에서 넓어지는 이유는 상태 random variable에 process noise가 더해지기 때문이다.</li>
-          <li>Gaussian product는 update의 직관이다. 두 정보를 결합하면 posterior가 더 좁아진다.</li>
-          <li>Kalman gain은 low-pass filter의 alpha처럼 볼 수 있지만, 고정값이 아니라 공분산으로부터 계산된다.</li>
-          <li>속도는 직접 측정하지 않아도, 위치와 속도를 함께 둔 상태공간 모델과 공분산 구조를 통해 보정될 수 있다.</li>
-        </ul>
-
-        <h2>19. 다음 단계</h2>
+        <h2>Page 18. 과거 상태에서 현재를 예측한다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-18.png" alt="예측 시스템 A를 이용해 과거 상태에서 현재 위치를 예측하는 과정"><figcaption>예측 시스템 A가 과거 상태를 현재 시점의 예측 상태로 이동시킨다.</figcaption></figure>
         <p>
-          다음 공부는 세 방향으로 이어진다. 첫 번째는 1D Kalman Filter를 직접 구현해 <code>P</code>, <code>Q</code>,
-          <code>R</code>, <code>K</code>가 시간에 따라 어떻게 변하는지 보는 것이다. 두 번째는 2D/3D MOT 상태 벡터로
-          확장해 detection box 중심점과 속도를 함께 추정하는 것이다. 세 번째는 Kalman Filter가 가진 한계에서 출발해
-          EKF, UKF, IMM, factor graph로 어떻게 확장되는지 연결하는 것이다.
+          예측 단계에서는 상태 전이 모델을 사용한다. 선형 시스템에서는 <code>x^-_k = A x_{k-1}</code>처럼 표현할 수 있다.
+          여기서 <code>A</code>는 상태가 시간에 따라 어떻게 변하는지 나타내는 시스템 행렬이고, 위 첨자 <code>-</code>는 아직
+          현재 측정값으로 보정되지 않은 예측값임을 뜻한다.
         </p>
 
-        <h2>14-50페이지에서 사용한 에셋</h2>
+        <h2>Page 19. 예측과 측정을 결합해 추정한다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-19.png" alt="예측된 상태와 측정 위치를 결합해 추정된 현재 상태를 얻는 과정"><figcaption>예측 상태와 새로운 측정 위치를 결합해 추정된 현재 상태를 만든다.</figcaption></figure>
         <p>
-          발표자료의 14-50페이지에 연결된 이미지 에셋만 별도 폴더에 추출했다. 앞쪽 프로젝트/현장 이미지는 포함하지 않았다.
-          본문에는 이 중 개념 설명에 직접 필요한 대표 도식들을 배치했고, 원본 에셋은
-          <code>assets/kalman-filter-study-note/</code>에 보관했다.
+          예측 상태는 물리 모델이 말하는 현재 위치이고, 측정값은 센서가 말하는 현재 위치다. 두 값이 다를 때 어느 쪽을
+          얼마나 신뢰할지는 각 불확실성에 따라 결정된다. 이 결합 결과가 현재의 posterior estimate다.
+        </p>
+
+        <h2>Page 20. k번째 관측까지 반복되는 구조</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-20.png" alt="시점 변화, 예측, 측정을 반복하며 추정 상태를 갱신하는 Kalman Filter의 재귀 구조"><figcaption>시점 변화, prediction, measurement와 update가 반복된다.</figcaption></figure>
+        <p>
+          k번째 관측에서도 같은 순서가 반복된다. 이전 추정 상태를 과거 상태로 넘기고, 예측 시스템으로 현재를 예측하고,
+          현재 측정값으로 보정한다. 상태와 공분산을 함께 갱신하기 때문에 필터가 반복될수록 조건이 맞는 상황에서는
+          실제 위치에 가까운 추정치를 얻을 수 있다.
+        </p>
+
+        <h2>Page 21. Kalman Filter 알고리즘의 큰 순서</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-21.png" alt="초깃값 선정, prediction, measurement, update로 구성된 Kalman Filter 알고리즘"><figcaption>알고리즘은 초기화, prediction, measurement, update로 나뉜다.</figcaption></figure>
+        <p>
+          전체 알고리즘은 초기값 선정 후 prediction과 update를 반복한다. prediction에서는 상태 예측과 오차 공분산 예측을
+          하고, update에서는 Kalman gain 계산, 추정값 계산, 오차 공분산 갱신을 수행한다.
+        </p>
+
+        <h2>Page 22. Prediction과 Update의 반복</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-22.png" alt="Prediction과 Update의 세부 단계를 다시 보여주는 Kalman Filter 알고리즘"><figcaption>상태와 불확실성을 예측한 뒤 측정으로 다시 보정한다.</figcaption></figure>
+        <p>
+          중요한 점은 상태값만 예측하는 것이 아니라 그 상태를 얼마나 믿을 수 있는지도 함께 예측한다는 것이다.
+          따라서 상태 벡터 <code>x</code>와 오차 공분산 <code>P</code>는 항상 함께 움직인다. 다음 update가 얼마나 측정값을
+          반영할지는 이 공분산들과 측정 노이즈에 의해 정해진다.
+        </p>
+
+        <h2>Page 23. 물리 법칙을 예측 시스템으로 만든다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-23.png" alt="물리 법칙을 상태 전이 시스템으로 설계하는 개념"><figcaption>예측 시스템은 추정하려는 대상의 물리적 관계에서 설계한다.</figcaption></figure>
+        <p>
+          Kalman Filter가 무엇을 예측할 수 있는지는 시스템 모델에 달려 있다. 차량의 위치와 속도를 추정한다면 위치와
+          속도의 관계, 시간 간격, 가속도에 대한 가정 등을 상태 전이식에 넣는다. 필터가 알아서 물리 법칙을 발견하는 것이
+          아니라, 사용자가 문제에 맞는 모델을 설계한다.
+        </p>
+
+        <h2>Page 24. 예측 시스템에도 불확실성이 있다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-24.png" alt="시스템 모델의 불확실성과 외부 요소의 불확실성"><figcaption>모델이 현실을 완벽히 설명하지 못하는 오차와 예측할 수 없는 외부 요인이 있다.</figcaption></figure>
+        <p>
+          등속도 모델을 사용하더라도 실제 차량이 항상 등속도로 움직이는 것은 아니다. 모델 자체가 현실을 단순화한 데서
+          오는 오차가 있고, 바람, 노면, 타이어, 운전자의 조작처럼 예측하기 어려운 외부 요인도 있다. 이 불확실성을
+          무시하지 않고 process noise로 모델링한다.
+        </p>
+
+        <h2>Page 25. 확률 분포와 Gaussian</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-25.png" alt="확률 분포와 Gaussian 정규 분포의 개념"><figcaption>Gaussian은 평균 주변에 값이 모이고 평균에서 멀어질수록 가능성이 낮아지는 분포다.</figcaption></figure>
+        <p>
+          확률 분포는 불확실한 변수가 어떤 값을 얼마나 가질 수 있는지를 표현한다. Gaussian 분포에서는 평균이 가장
+          가능성이 높은 중심이고, 분산이 분포의 폭을 결정한다. Kalman Filter는 선형 시스템과 Gaussian noise라는 조건에서
+          이 분포를 효율적으로 갱신한다.
+        </p>
+
+        <h2>Page 26. 상태와 process noise를 Gaussian으로 표현한다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-26.png" alt="차량 상태의 불확실성과 process noise covariance Q를 Gaussian으로 표현하는 과정"><figcaption>상태의 평균은 가장 가능성 높은 상태이고 분산은 불확실성이다.</figcaption></figure>
+        <p>
+          실제 상태 <code>x</code>와 우리가 가진 추정값은 구분해야 한다. 상태는 알고 싶은 물리량이고, 추정값은 그 상태에
+          대한 현재의 믿음이다. 이 믿음의 분포를 Gaussian으로 표현할 때 평균은 추정 상태, 공분산 <code>P</code>는 추정
+          오차의 불확실성을 뜻한다.
+        </p>
+        <p>
+          슬라이드의 <code>Q</code>는 시스템이 한 단계 진행되는 동안 추가되는 process noise의 공분산이다. 따라서
+          <code>Q</code> 자체가 현재 상태의 오차 공분산 <code>P</code>와 같은 것은 아니다. <code>Q</code>는 모델이 놓치는
+          움직임과 외부 요인의 크기를 나타내고, prediction 뒤의 <code>P^-</code>를 키우는 원인이 된다.
+        </p>
+
+        <h2>Page 27. 등속도 모델과 상태 벡터</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-27.png" alt="위치와 속도를 상태로 두고 등속도 모델을 설계하는 과정"><figcaption>위치와 속도의 관계를 이용해 등속도 prediction model을 만든다.</figcaption></figure>
+        <p>
+          가장 기본적인 모델은 짧은 시간 동안 속도가 일정하다고 가정하는 등속도 모델이다. 상태를
+          <code>x = [position, velocity]^T</code>로 두면, 다음 위치는 이전 위치에 속도와 시간 간격의 곱을 더한 값으로
+          표현할 수 있다. 속도는 위치의 변화량이라는 관계가 상태 전이 행렬에 들어간다.
+        </p>
+
+        <h2>Page 28. 상태 전이 행렬의 구조</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-28.png" alt="등속도 모델의 상태 전이 행렬을 전개하는 과정"><figcaption>등속도 가정이 위치와 속도의 행렬 관계로 전개된다.</figcaption></figure>
+        <p>
+          상태 전이 행렬 <code>A</code>의 위치 행에는 시간 간격 <code>dt</code>가 들어가고, 속도 행에는 이전 속도를 유지하는
+          항이 들어간다. 이 행렬을 통해 이전 상태를 현재 시점의 예측 상태로 바꾼다. 실제 시스템에서는 상태의 정의와
+          운동 가정에 따라 <code>A</code>가 달라진다.
+        </p>
+
+        <h2>Page 29. 예측 시스템 적용</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-29.png" alt="설계한 예측 시스템을 상태에 적용하는 과정"><figcaption>설계한 시스템 행렬을 이전 상태에 적용해 예측값을 계산한다.</figcaption></figure>
+        <p>
+          prediction은 단순히 위치 좌표를 임의로 옮기는 과정이 아니다. 현재까지의 추정 위치와 속도를 상태 벡터로 묶고,
+          문제에 맞는 전이 행렬을 곱해 다음 상태를 계산한다. 이 단계의 품질은 물리 모델이 실제 움직임을 얼마나 잘
+          설명하는지에 크게 좌우된다.
+        </p>
+
+        <h2>Page 30. 초기 위치에서 예측 위치로</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-30.png" alt="초기 위치에서 prediction이 시작되는 과정"><figcaption>초기 상태에 예측 시스템을 적용하기 전의 기준 상태다.</figcaption></figure>
+        <p>
+          초기 상태는 하나의 점으로만 생각할 수 있지만, 실제로는 그 값에도 불확실성이 있다. 초기 속도를 모르거나 위치
+          측정이 부정확할 수 있으므로 초기 공분산 <code>P_0</code>도 함께 설정해야 한다.
+        </p>
+
+        <h2>Page 31. Prediction은 불확실성을 키운다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-31.png" alt="예측 위치로 이동하면서 process noise Q만큼 Gaussian 분포가 넓어지는 과정"><figcaption>예측 상태의 평균은 이동하고, process noise 때문에 분포는 넓어진다.</figcaption></figure>
+        <p>
+          prediction 후 상태 평균은 모델이 예측한 위치로 이동한다. 동시에 예측 공분산은
+          <code>P^-_k = A P_{k-1} A^T + Q</code>로 계산된다. 이전 불확실성이 시스템을 거쳐 전달되고, 모델이 설명하지
+          못하는 새로운 불확실성 <code>Q</code>가 더해지므로 보통 prediction은 분포를 넓힌다.
+        </p>
+
+        <h2>Page 32. Gaussian의 합과 공분산의 덧셈</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-32.png" alt="두 Gaussian random variable의 합도 Gaussian으로 표현할 수 있다는 개념"><figcaption>독립적인 Gaussian noise가 더해지면 분산 또는 공분산이 합쳐진다.</figcaption></figure>
+        <p>
+          여기서 말하는 Gaussian의 합은 두 확률 밀도 곡선을 단순히 세로로 더한다는 뜻이 아니다. 상태 전이에서
+          <code>x_k = A x_{k-1} + w_k</code>처럼 random variable인 상태에 Gaussian process noise <code>w_k</code>가 더해진다는
+          의미다. 독립적인 오차가 합쳐지면 공분산이 더해지고, 그래서 예측 분포의 폭이 넓어진다.
+        </p>
+
+        <h2>Page 33. 측정값을 넣고 Update로 넘어간다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-33.png" alt="Prediction 뒤 측정값을 입력하고 Kalman gain과 추정값을 계산하는 update 과정"><figcaption>예측 이후 새로운 measurement를 입력해 update를 시작한다.</figcaption></figure>
+        <p>
+          prediction이 끝나면 센서 측정값을 입력한다. 이제 예측 상태와 측정값 중 어느 쪽을 더 믿을지 계산하고, 그 결과로
+          현재 상태와 공분산을 갱신한다. 이때 핵심 가중치가 Kalman gain이다.
+        </p>
+
+        <h2>Page 34. 측정값도 불확실하다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-34.png" alt="LiDAR 측정값에도 measurement noise가 있어 Gaussian으로 모델링하는 과정"><figcaption>센서 측정값의 평균은 관측값이고, 측정 오차의 크기는 R로 표현한다.</figcaption></figure>
+        <p>
+          센서가 준 위치도 정답이 아니다. LiDAR의 검출점, 이미지의 픽셀, 레이더의 측정값에는 센서와 환경에 따른 오차가
+          있다. 이 측정값의 불확실성을 measurement noise covariance <code>R</code>로 나타낸다. 한 차원에서는 분산이고,
+          여러 상태에서는 공분산 행렬이다.
+        </p>
+
+        <h2>Page 35. 측정값의 Gaussian 분포</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-35.png" alt="예측 위치와 측정값을 각각 Gaussian 분포로 표현하는 과정"><figcaption>측정값은 평균이 측정 위치이고 분산이 R인 Gaussian으로 표현된다.</figcaption></figure>
+        <p>
+          예측 상태에는 예측 평균과 예측 공분산이 있고, 측정값에는 측정 평균과 <code>R</code>이 있다. 센서가 정확하면
+          <code>R</code>이 작아 측정 분포가 좁고, 센서가 불안정하면 <code>R</code>이 커 측정 분포가 넓다. Kalman Filter는
+          이 두 정보의 상대적인 확실성을 비교한다.
+        </p>
+
+        <h2>Page 36. Update 알고리즘의 세 단계</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-36.png" alt="Kalman gain, 추정값, 오차 공분산을 순서대로 계산하는 update 알고리즘"><figcaption>Update는 Kalman gain, 추정값, 오차 공분산 순서로 계산한다.</figcaption></figure>
+        <p>
+          Update 단계는 먼저 Kalman gain을 구하고, innovation인 측정 잔차를 이용해 상태를 보정한 다음, 보정 후의 공분산을
+          계산한다. 선형 측정 모델에서는 <code>K_k = P^-_k H^T (H P^-_k H^T + R)^{-1}</code>로 쓸 수 있다.
+        </p>
+
+        <h2>Page 37. 예측 분포와 측정 분포의 결합</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-37.png" alt="예측 위치의 Gaussian과 측정값의 Gaussian을 함께 놓고 결합하는 과정"><figcaption>Update는 예측 분포와 측정 분포를 결합하는 과정이다.</figcaption></figure>
+        <p>
+          예측값과 측정값이 서로 다르다고 해서 하나를 무조건 버리지 않는다. 두 분포의 중심과 폭을 함께 고려해, 더
+          확실한 정보에 가까운 새로운 상태 분포를 만든다. 이 관점이 다음 페이지의 Bayes Filter로 연결된다.
+        </p>
+
+        <h2>Page 38. Bayes Filter의 기본 식</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-38.png" alt="Prior와 likelihood를 곱해 posterior를 얻는 Bayes Filter 식"><figcaption>posterior는 likelihood와 prior의 곱을 정규화한 결과다.</figcaption></figure>
+        <p>
+          Bayes 정리는 <code>p(x | z) ∝ p(z | x) p(x)</code>로 요약할 수 있다. <code>p(x)</code>는 새로운 측정 전의
+          prior, <code>p(z | x)</code>는 상태가 주어졌을 때 해당 측정이 관측될 likelihood, <code>p(x | z)</code>는
+          측정 후의 posterior다. 정규화 상수는 확률 전체가 1이 되도록 맞춘다.
+        </p>
+
+        <h2>Page 39. Prediction은 Prior가 된다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-39.png" alt="예측 상태 분포가 prior가 되고 새로운 측정값이 likelihood가 되는 Bayes Filter 과정"><figcaption>현재 prediction 분포가 prior가 되고 새 measurement가 update에 사용된다.</figcaption></figure>
+        <p>
+          Kalman Filter에서는 prediction으로 얻은 현재 상태 분포가 prior 역할을 한다. 센서가 준 measurement는 likelihood를
+          형성하고, 둘을 결합한 posterior가 현재 추정 상태가 된다. 다음 시간 단계에서는 이 posterior가 다시 다음 prior의
+          출발점이 된다. 이것이 Bayesian filtering이 재귀적으로 동작하는 방식이다.
+        </p>
+
+        <h2>Page 40. 추정 상태는 두 Gaussian의 곱이다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-40.png" alt="예측 Gaussian과 측정 Gaussian의 곱으로 추정 상태 Gaussian을 만드는 과정"><figcaption>예측 분포와 측정 분포의 곱이 posterior Gaussian을 만든다.</figcaption></figure>
+        <p>
+          선형 Gaussian 조건에서 posterior도 Gaussian이다. 예측 Gaussian과 측정 likelihood Gaussian을 곱하면, 두 정보가
+          동시에 그럴듯한 구간이 높은 확률을 갖는 새로운 Gaussian이 나온다. 이것은 실제 곡선의 높이를 단순히 더하는 것이
+          아니라, 각 상태값에서 두 정보가 동시에 지지하는 정도를 곱하는 것이다.
+        </p>
+
+        <h2>Page 41. Gaussian 곱의 평균과 분산</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-41.png" alt="Gaussian 두 개를 곱했을 때 평균은 더 확실한 분포에 가깝고 분산은 작아지는 성질"><figcaption>더 좁은 분포, 즉 더 확실한 정보 쪽으로 평균이 가까워지고 posterior 분산은 작아진다.</figcaption></figure>
+        <p>
+          두 Gaussian을 결합하면 posterior 평균은 분산이 작은 쪽, 즉 더 확실하다고 판단한 정보에 더 가까워진다.
+          posterior 공분산은 두 독립 정보가 추가된 결과이므로 일반적으로 update 전보다 작아진다. 다만 이 결과가 항상
+          현실의 정답을 보장하는 것은 아니며, <code>Q</code>, <code>R</code>을 잘못 설정하거나 outlier를 정상 측정으로
+          취급하면 과신하는 문제가 생길 수 있다.
+        </p>
+
+        <h2>Page 42. Gaussian 곱의 예</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-42.png" alt="서로 다른 평균과 분산을 가진 Gaussian의 곱 예시"><figcaption>두 분포의 위치와 폭에 따라 결합 분포의 위치가 결정된다.</figcaption></figure>
+        <p>
+          예측 분포가 넓고 측정 분포가 좁다면 결합 결과는 측정값에 더 가깝다. 반대로 측정 노이즈가 커서 측정 분포가
+          넓다면 prediction의 영향을 더 많이 받는다. 따라서 Kalman Filter의 가중치는 고정된 상수라기보다 공분산에서
+          매 단계 계산되는 값이다.
+        </p>
+
+        <h2>Page 43. 추정 상태 분포의 생성</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-43.png" alt="초기 위치와 예측 위치, 측정값에서 추정 상태 확률 분포를 만드는 과정"><figcaption>예측과 measurement를 결합한 결과가 추정 상태 확률 분포다.</figcaption></figure>
+        <p>
+          그림의 추정 상태 분포는 단순히 두 평균의 가운데를 택한 결과가 아니다. 각 분포의 폭까지 반영한 확률적 결합의
+          결과다. 그래서 평균뿐 아니라 posterior의 분산도 함께 얻고, 다음 prediction에서 이 분산을 다시 사용한다.
+        </p>
+
+        <h2>Page 44. Update는 분포의 곱이다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-44.png" alt="예측 상태 확률 분포와 측정값 확률 분포를 곱해 추정 상태를 계산하는 과정"><figcaption>예측 상태 분포와 측정값 분포의 곱으로 추정 상태를 계산한다.</figcaption></figure>
+        <p>
+          이 페이지는 update를 시각적으로 한 번 더 정리한다. prior에 해당하는 예측 상태와 likelihood에 해당하는 측정
+          분포를 곱하고 정규화하면 posterior인 추정 상태가 된다. Kalman Filter는 이 Bayesian update를 Gaussian 형태로
+          닫힌 식으로 계산할 수 있도록 만든 알고리즘으로 볼 수 있다.
+        </p>
+
+        <h2>Page 45. 평균과 분산을 정리하면 공통 항이 생긴다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-45.png" alt="Gaussian 곱에서 posterior 평균과 분산을 정리하는 과정"><figcaption>posterior 평균과 분산의 식을 정리하면 공통으로 반복되는 항이 드러난다.</figcaption></figure>
+        <p>
+          Gaussian product를 전개하면 posterior 평균과 공분산을 각각 계산할 수 있다. 이 식을 prediction covariance와
+          measurement covariance 관점에서 다시 정리하면, 두 정보의 상대적인 신뢰도를 나타내는 공통 항이 나타난다.
+        </p>
+
+        <h2>Page 46. Kalman Gain</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-46.png" alt="예측 공분산과 측정 공분산에서 Kalman gain을 도출하는 과정"><figcaption>공분산과 측정 모델로부터 Kalman gain을 계산한다.</figcaption></figure>
+        <p>
+          그 공통 항이 Kalman gain <code>K</code>다. 측정값이 상태를 직접 관측하는 단순한 경우에는 update가
+          <code>x_k = x^-_k + K_k(z_k - Hx^-_k)</code>처럼 보인다. 괄호 안은 measurement residual 또는 innovation이고,
+          <code>K</code>는 그 잔차를 상태에 얼마나 반영할지 결정한다.
+        </p>
+        <p>
+          따라서 1차 저역통과 필터의 고정된 <code>alpha</code>와 비슷한 역할을 한다고 볼 수 있지만, Kalman gain은 고정된
+          상수가 아니다. prediction uncertainty <code>P^-</code>, measurement noise <code>R</code>, 측정 모델 <code>H</code>에
+          따라 매 단계 달라진다.
+        </p>
+
+        <h2>Page 47. 추정값과 오차 공분산을 갱신한다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-47.png" alt="Kalman gain을 이용해 추정 상태와 오차 공분산을 계산하는 최종 식"><figcaption>Kalman gain으로 상태 평균과 오차 공분산을 함께 갱신한다.</figcaption></figure>
+        <p>
+          상태 update는 예측 상태에 잔차의 보정량을 더하는 형태이고, 공분산 update는 measurement를 반영한 뒤 남은
+          불확실성을 계산하는 형태다. 한 차원의 직관으로는 measurement가 정확할수록 측정값 쪽으로 더 이동하고,
+          update 후 분산도 더 작아진다.
+        </p>
+
+        <h2>Page 48. Kalman Filter의 최종 정리</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-48.png" alt="Kalman Filter가 prediction과 measurement의 확률 분포를 재귀적으로 결합한다는 최종 정리"><figcaption>사용자는 prediction model과 Q, R을 설계하고 필터는 상태를 재귀적으로 추정한다.</figcaption></figure>
+        <p>
+          Kalman Filter는 예측 상태와 측정값의 확률 분포를 반복해서 결합해 객체의 현재 상태를 추정한다. 사람이 해야 할
+          일은 어떤 상태를 추정할지 정하고, 그 상태가 어떻게 변하는지 prediction model을 설계하고, process noise와
+          measurement noise의 공분산 <code>Q</code>, <code>R</code>을 현실에 맞게 설정하는 것이다.
+        </p>
+        <p>
+          실제 시스템에서 <code>Q</code>와 <code>R</code>은 임의의 숫자가 아니다. <code>Q</code>가 너무 작으면 모델을
+          과신하고 측정 변화를 늦게 반영할 수 있고, 너무 크면 noisy measurement를 과도하게 따라갈 수 있다.
+          <code>R</code> 역시 센서의 실제 오차 특성을 반영해야 한다.
+        </p>
+
+        <h2>Page 49. 위치와 속도를 하나의 상태로 둔다</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-49.png" alt="위치와 속도를 함께 가진 2차원 Gaussian과 공분산에 따른 타원 방향"><figcaption>위치와 속도를 함께 상태로 두면 2차원 Gaussian과 공분산으로 표현할 수 있다.</figcaption></figure>
+        <p>
+          위치 측정만 가지고 속도까지 추정하려면 상태 벡터에 위치와 속도를 함께 넣어야 한다. 그러면 불확실성은 1차원
+          Gaussian이 아니라 2차원 Gaussian으로 표현된다. 공분산이 0이면 위치와 속도 오차가 독립적이라 타원의 기울기가
+          없고, 공분산이 0이 아니면 둘 사이의 상관관계 때문에 타원이 기울어진다.
+        </p>
+        <p>
+          이 상관관계가 있기 때문에 위치 측정이 들어왔을 때 속도 성분도 간접적으로 보정될 수 있다. 센서가 속도를 직접
+          측정하지 않아도, motion model과 위치-속도 공분산이 속도 update를 전달한다.
+        </p>
+
+        <h2>Page 50. 위치 측정이 속도 추정에 영향을 주는 이유</h2>
+        <figure class="post-figure"><img src="../assets/kalman-filter-study-slides/slide-50.png" alt="Kalman gain과 잔차가 위치와 속도 상태에 각각 더해지는 과정"><figcaption>같은 measurement residual이 Kalman gain의 각 성분을 통해 위치와 속도에 다르게 반영된다.</figcaption></figure>
+        <p>
+          update 식에서 measurement residual은 하나지만, Kalman gain은 상태의 각 성분에 대응하는 값을 가진다. 따라서
+          위치 성분에는 위치에 대한 보정량이, 속도 성분에는 속도에 대한 보정량이 각각 더해진다. 속도 측정값이 직접 들어온
+          것이 아니라, 위치 잔차가 현재 위치와 속도의 상관관계를 통해 속도 상태에도 전달되는 것이다.
+        </p>
+        <p>
+          이 부분이 발표 자료에서 가장 중요하게 이해하려고 했던 지점이다. Kalman Filter는 단순히 위치 측정값을 매끄럽게
+          만드는 필터가 아니다. 상태를 위치와 속도처럼 여러 변수로 구성하고, 시스템 모델과 공분산 구조를 이용해 직접
+          관측되지 않은 상태까지 함께 추정한다.
+        </p>
+
+        <h2>정리하며</h2>
+        <p>
+          이번 공부에서 Kalman Filter를 다음과 같이 정리했다. prediction은 모델을 이용해 상태와 불확실성을 앞으로
+          전파하는 과정이고, update는 measurement와 예측을 Bayes 관점에서 결합하는 과정이다. <code>P</code>는 현재 추정
+          상태의 오차 공분산, <code>Q</code>는 process noise covariance, <code>R</code>은 measurement noise covariance다.
+        </p>
+        <p>
+          Gaussian product에서 posterior 분산이 작아지는 것은 두 정보를 결합했기 때문이다. 하지만 실제 시스템에서는
+          outlier, 잘못된 모델, 시간에 따라 변하는 노이즈가 존재하므로 작은 공분산이 항상 올바른 확신을 의미하지는 않는다.
+          이후에는 이 기본 구조를 바탕으로 EKF와 UKF, IMM, adaptive noise, factor graph와 smoothing으로 확장해볼 수 있다.
         </p>
       </article>
     </main>
