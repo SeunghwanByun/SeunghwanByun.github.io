@@ -90,6 +90,15 @@
           예측한 다음, k번째 측정 위치로 현재 상태를 보정한다. 이렇게 추정 상태가 재귀적으로 갱신되며, 시스템 모델과
           측정 노이즈가 적절히 설정되어 있다면 반복할수록 실제 위치와 추정 위치의 오차가 줄어든다.
         </p>
+        <div class="study-figure-stack">
+          <figure class="post-figure"><img src="../assets/kalman-filter-study-diagrams/slide-14.png" alt="과거와 현재 시점에서 측정 위치가 Kalman Filter를 거쳐 추정 상태가 되는 자동차 흐름"><figcaption>재귀 필터는 이전 추정 상태와 새 측정 위치를 다음 추정 상태로 전달한다.</figcaption></figure>
+          <figure class="post-figure"><img src="../assets/kalman-filter-study-diagrams/slide-15.png" alt="첫 번째 관측에서 자동차 위치를 초기 상태로 정하는 그림"><figcaption>첫 번째 관측에서는 측정 위치를 초기 상태로 사용한다.</figcaption></figure>
+          <figure class="post-figure"><img src="../assets/kalman-filter-study-diagrams/slide-16.png" alt="첫 번째 관측 상태가 두 번째 관측에서 과거 상태가 되는 자동차 그림"><figcaption>시간이 흐르면 초기 상태는 과거 상태가 된다.</figcaption></figure>
+          <figure class="post-figure"><img src="../assets/kalman-filter-study-diagrams/slide-17.png" alt="두 번째 관측에서 새로운 현재 위치를 측정하는 자동차 그림"><figcaption>두 번째 관측에서는 새로운 현재 위치 측정값이 들어온다.</figcaption></figure>
+          <figure class="post-figure"><img src="../assets/kalman-filter-study-diagrams/slide-18.png" alt="예측 시스템 A가 과거 상태에서 현재 위치를 예측하는 자동차 그림"><figcaption>예측 시스템은 과거 상태를 현재 시점의 예측 상태로 이동시킨다.</figcaption></figure>
+          <figure class="post-figure"><img src="../assets/kalman-filter-study-diagrams/slide-19.png" alt="예측 상태와 측정 위치를 사용해 현재 상태를 추정하는 자동차 그림"><figcaption>예측 상태와 측정 위치를 결합해 현재 상태를 추정한다.</figcaption></figure>
+          <figure class="post-figure"><img src="../assets/kalman-filter-study-diagrams/slide-20.png" alt="k번째 관측까지 prediction과 update가 반복되는 자동차 흐름"><figcaption>이 흐름이 k번째 관측까지 반복되며 추정 상태가 갱신된다.</figcaption></figure>
+        </div>
 
         <h2>Prediction과 Update</h2>
         <p>
