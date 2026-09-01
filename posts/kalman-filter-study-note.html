@@ -115,7 +115,14 @@
           이 모델은 필터가 알아서 발견하는 것이 아니라 문제를 이해한 사람이 설계한다. 차량의 위치와 속도를 추정한다면
           위치와 속도의 관계, 시간 간격, 등속도 또는 가속도에 대한 가정을 모델에 넣는다.
         </p>
-        <figure class="post-figure"><img src="../assets/kalman-filter-screenshots/10-prediction-system.png" alt="물리 법칙을 예측 시스템으로 설계하는 개념"><figcaption>물리 법칙과 상태의 관계를 예측 시스템으로 만든다.</figcaption></figure>
+        <figure class="post-figure"><img src="../assets/kalman-filter-screenshots/07-prediction-system.png" alt="과거 위치 5m와 속도 10m/s를 사용해 1초 뒤 현재 위치 15m를 예측하는 그림"><figcaption>과거 위치와 속도를 이용해 현재 위치를 예측하는 시스템 모델.</figcaption></figure>
+        <p>
+          이미지의 예시에서는 과거 위치가 \(5\,\mathrm{m}\), 속도가 \(10\,\mathrm{m/s}\), 시간 간격이 \(1\,\mathrm{s}\)다.
+          등속도 가정에서는 속도에 시간 간격을 곱한 이동 거리를 과거 위치에 더해 현재 위치를 예측한다.
+        </p>
+        <div class="math-display">\[
+          p_1 = p_0 + v_0\Delta t = 5 + 10\times 1 = 15\,\mathrm{m}
+        \]</div>
         <p>
           발표 자료에서는 상태를 Gaussian 분포로 표현하는 것을 다음처럼 적었다. 여기서 \(\mu\)는 평균이고 \(\sigma\)는
           표준편차다. 공분산을 사용하는 다변량 상태에서는 \(\sigma^2\) 대신 공분산 행렬 \(\mathbf{P}\)를 사용한다.
