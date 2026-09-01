@@ -123,6 +123,12 @@
         <div class="math-display">\[
           p_1 = p_0 + v_0\Delta t = 5 + 10\times 1 = 15\,\mathrm{m}
         \]</div>
+        <figure class="post-figure"><img src="../assets/kalman-filter-screenshots/12-prediction-gaussian.png" alt="초기 상태에서 예측 위치와 예측 Gaussian 분포가 만들어지는 그림"><figcaption>물리 모델로 위치를 예측하면 예측 위치와 그 불확실성을 함께 얻는다.</figcaption></figure>
+        <p>
+          그림의 예측 Gaussian은 단순히 자동차의 위치 하나만 표시한 것이 아니다. 중심은 예측 위치이고 폭은 예측의
+          불확실성이다. 따라서 시스템 행렬은 평균을 이동시키는 역할과 함께, 이전 공분산을 현재 시점으로 전달하는 역할도
+          한다.
+        </p>
         <p>
           발표 자료에서는 상태를 Gaussian 분포로 표현하는 것을 다음처럼 적었다. 여기서 \(\mu\)는 평균이고 \(\sigma\)는
           표준편차다. 공분산을 사용하는 다변량 상태에서는 \(\sigma^2\) 대신 공분산 행렬 \(\mathbf{P}\)를 사용한다.
@@ -395,6 +401,7 @@
           때문에 위치 measurement의 오차가 속도 상태에도 전달된다. 위치가 예측보다 크게 벗어났다면, 필터는 그 차이를
           현재 속도 추정에도 반영해 다음 위치 예측을 바꾼다.
         </p>
+        <figure class="post-figure"><img src="../assets/kalman-filter-screenshots/23-state-update.png" alt="초기 상태에서 예측 위치와 측정값을 반복적으로 결합하는 Kalman Filter 흐름"><figcaption>예측 위치와 측정값을 반복해서 결합하며 위치와 속도 상태를 갱신한다.</figcaption></figure>
         <h2>마무리</h2>
         <p>
           Kalman Filter는 noisy한 센서값을 단순히 평균내는 필터가 아니다. 상태를 Gaussian 분포로 표현하고, 물리 모델로
