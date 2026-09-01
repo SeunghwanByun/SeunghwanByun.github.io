@@ -117,6 +117,11 @@
         </p>
         <figure class="post-figure"><img src="../assets/kalman-filter-screenshots/10-prediction-system.png" alt="물리 법칙을 예측 시스템으로 설계하는 개념"><figcaption>물리 법칙과 상태의 관계를 예측 시스템으로 만든다.</figcaption></figure>
         <p>
+          발표 자료에서는 상태를 Gaussian 분포로 표현하는 것을 다음처럼 적었다. 여기서 \(\mu\)는 평균이고 \(\sigma\)는
+          표준편차다. 공분산을 사용하는 다변량 상태에서는 \(\sigma^2\) 대신 공분산 행렬 \(\mathbf{P}\)를 사용한다.
+        </p>
+        <div class="math-display">\[ f(x) = \mathcal{N}(\mu,\sigma) \]</div>
+        <p>
           다만 모델이 현실을 완벽하게 설명할 수는 없다. 등속도 모델을 사용해도 실제 차량은 가속하거나 감속할 수 있고,
           바람, 노면, 타이어 상태, 운전자의 조작처럼 미리 정확하게 알 수 없는 요인이 있다. 이 모델 오차와 외부 요인을
           process noise로 다룬다.
@@ -131,12 +136,29 @@
         </p>
         <figure class="post-figure"><img src="../assets/kalman-filter-screenshots/12-prediction-gaussian.png" alt="확률 분포와 Gaussian 정규 분포의 개념"><figcaption>평균 주변에 값이 모이고 멀어질수록 가능성이 낮아지는 Gaussian 분포.</figcaption></figure>
         <p>
+          초기 상태의 평균과 공분산을 각각 \(\hat{\mathbf{x}}_0\), \(\mathbf{P}_0\)라고 하자. 예측 시스템 \(\mathbf{A}\)를
+          적용하면 평균은 예측 위치로 이동하고, 공분산에는 process noise covariance \(\mathbf{Q}\)가 더해진다.
+        </p>
+        <div class="math-display">\[
+          \hat{\mathbf{x}}_1^- = \mathbf{A}\hat{\mathbf{x}}_0,
+          \qquad
+          \mathbf{P}_1^- = \mathbf{A}\mathbf{P}_0\mathbf{A}^{\mathsf{T}} + \mathbf{Q}
+        \]</div>
+        <p>
           여기서 세 가지를 분리해서 이해해야 한다. 상태 <code>x</code>는 알고 싶은 실제 물리량이고, 추정 상태는 그 상태에
           대한 현재의 믿음이다. 추정 상태의 오차 공분산은 <code>P</code>로 표현한다. 반면 <code>Q</code>는 process noise의
           공분산이고, <code>R</code>은 measurement noise의 공분산이다. <code>Q</code>와 <code>R</code>은 <code>P</code>와
           같은 대상이 아니라, <code>P</code>가 어떻게 변할지를 결정하는 노이즈 모델이다.
         </p>
         <figure class="post-figure"><img src="../assets/kalman-filter-screenshots/13-prediction-gaussian.png" alt="상태 불확실성과 process noise covariance Q를 Gaussian으로 표현한 그림"><figcaption>상태의 평균은 추정값이고 분산은 불확실성이다. Q는 process noise covariance다.</figcaption></figure>
+        <p>
+          일변량 Gaussian 변수 두 개의 합을 생각하면 평균은 더해지고, 서로 독립인 경우 분산도 더해진다.
+        </p>
+        <div class="math-display">\[
+          \mu' = \mu_0 + \mu_1,
+          \qquad
+          (\sigma')^2 = \sigma_0^2 + \sigma_1^2
+        \]</div>
 
         <h2>등속도 모델로 위치와 속도를 함께 예측하기</h2>
         <p>
@@ -239,7 +261,33 @@
           <code>R</code>이 크면 측정값을 덜 신뢰한다. Prediction의 공분산 <code>P^-</code>와 measurement noise <code>R</code>을
           비교하는 것이 update의 핵심이다.
         </p>
+        <p>
+          선형 측정 모델은 상태를 measurement 공간으로 옮기는 행렬 \(\mathbf{H}\)와 측정 노이즈 \(\mathbf{v}_k\)로
+          표현할 수 있다. 측정 노이즈는 평균이 0이고 공분산이 \(\mathbf{R}\)인 Gaussian으로 모델링한다.
+        </p>
+        <div class="math-display">\[
+          \mathbf{z}_k = \mathbf{H}\mathbf{x}_k + \mathbf{v}_k,
+          \qquad
+          \mathbf{v}_k \sim \mathcal{N}(\mathbf{0},\mathbf{R})
+        \]</div>
         <figure class="post-figure"><img src="../assets/kalman-filter-screenshots/19-update-gaussian.png" alt="예측 위치와 측정값을 각각 Gaussian 분포로 표현한 그림"><figcaption>예측 상태의 Gaussian과 measurement Gaussian을 함께 놓는다.</figcaption></figure>
+        <p>
+          두 Gaussian의 곱은 두 정보가 동시에 지지하는 posterior Gaussian이 된다. 일변량 예시에서는 다음 식으로 평균과
+          분산을 계산할 수 있다.
+        </p>
+        <div class="math-display">\[
+          \mu' = \frac{\mu_1\sigma_0^2 + \mu_0\sigma_1^2}{\sigma_0^2 + \sigma_1^2},
+          \qquad
+          (\sigma')^2 = \frac{\sigma_0^2\sigma_1^2}{\sigma_0^2 + \sigma_1^2}
+        \]</div>
+        <p>
+          예를 들어 \(\mu_0=10\), \(\sigma_0^2=8\), \(\mu_1=12\), \(\sigma_1^2=2\)라면 다음과 같다.
+        </p>
+        <div class="math-display">\[
+          \mu' = \frac{12\times 8 + 10\times 2}{8+2} = 11.6,
+          \qquad
+          (\sigma')^2 = \frac{8\times 2}{8+2} = 1.6
+        \]</div>
         <figure class="post-figure"><img src="../assets/kalman-filter-screenshots/20-update-gaussian.png" alt="Kalman gain과 추정값, 공분산을 계산하는 update 알고리즘 그림"><figcaption>Update는 Kalman gain, 추정 상태, 오차 공분산을 계산한다.</figcaption></figure>
         <figure class="post-figure"><img src="../assets/kalman-filter-screenshots/21-kalman-gain.png" alt="예측 분포와 측정 분포를 결합하기 전의 그림"><figcaption>예측 분포와 측정 분포의 상대적인 확실성을 비교한다.</figcaption></figure>
 
@@ -281,9 +329,24 @@
         </p>
         <div class="math-display">\[ \mathbf{K}_k = \mathbf{P}_k^-\mathbf{H}^{\mathsf{T}}\left(\mathbf{H}\mathbf{P}_k^-\mathbf{H}^{\mathsf{T}} + \mathbf{R}\right)^{-1} \]</div>
         <p>
+          일변량에서 위 식은 두 Gaussian product의 평균식을 Kalman Filter 형태로 다시 쓴 것이다. 예측 공분산이 클수록
+          measurement를 더 반영하고, 측정 노이즈 공분산이 클수록 prediction을 더 믿게 된다.
+        </p>
+        <div class="math-display">\[
+          \mu' = \mu_0 + K(\mu_1-\mu_0),
+          \qquad
+          K = \frac{\sigma_0^2}{\sigma_0^2+\sigma_1^2}
+        \]</div>
+        <p>
           상태 update는 다음처럼 쓸 수 있다.
         </p>
         <div class="math-display">\[ \hat{\mathbf{x}}_k = \hat{\mathbf{x}}_k^- + \mathbf{K}_k\left(\mathbf{z}_k - \mathbf{H}\hat{\mathbf{x}}_k^-\right) \]</div>
+        <p>
+          상태 평균뿐 아니라 update 이후의 불확실성도 갱신한다. 선형 측정 모델의 공분산 갱신식은 다음과 같다.
+        </p>
+        <div class="math-display">\[
+          \mathbf{P}_k = (\mathbf{I}-\mathbf{K}_k\mathbf{H})\mathbf{P}_k^-
+        \]</div>
         <p>
           괄호 안의 <code>z_k - H x_k^-</code>는 measurement residual 또는 innovation이다. Kalman gain은 이 잔차를 상태에
           얼마나 반영할지 결정한다. 예측 공분산이 크면 “모델을 확신하기 어렵다”는 뜻이므로 측정값의 영향이 커지고,
