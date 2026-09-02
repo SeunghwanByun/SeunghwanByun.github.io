@@ -15,6 +15,7 @@
       rel="stylesheet"
     >
     <link rel="stylesheet" href="../styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
   </head>
   <body>
     <header class="site-header">
@@ -57,10 +58,13 @@
           <code>h</code>라고 하면, 이 아래쪽 경계가 처음 수면과 만나는 거리까지가 근거리 기하학적 음영으로
           근사된다.
         </p>
-        <pre><code>D_blind = h * cot(theta / 2)</code></pre>
+        <div class="math-display">\[
+          D_{\mathrm{blind}} = h\,\cot\left(\frac{\theta}{2}\right)
+        \]</div>
         <p>
-          우리가 사용한 Furuno radar의 vertical beam width가 22도라면 <code>theta / 2 = 11도</code>이고,
-          <code>cot(11도) ~= 5.14</code>다. 따라서 기하학적 blind range는 대략 안테나 높이의 5.14배다.
+          우리가 사용한 Furuno radar의 vertical beam width가 \(\theta=22^\circ\)라면
+          \(\theta/2=11^\circ\)이고, \(\cot(11^\circ)\approx 5.14\)다. 따라서 기하학적 blind range는
+          대략 안테나 높이의 5.14배다.
         </p>
         <ul>
           <li>안테나 높이 5 m: 약 25.7 m</li>
@@ -84,7 +88,9 @@
           즉 pulse는 파장 하나가 아니라, 같은 파장의 전파가 일정 시간 동안 이어진 전파 묶음이다. 같은 peak power로
           더 오래 송신하면 한 pulse에 실리는 총 에너지가 커진다.
         </p>
-        <pre><code>pulse energy ~= peak power * pulse width</code></pre>
+        <div class="math-display">\[
+          E_{\mathrm{pulse}} \approx P_{\mathrm{peak}}\,\tau
+        \]</div>
         <p>
           여기서 Watt는 Joule per second다. 전기 회로 관점에서는 전압과 전류의 곱으로 볼 수 있고, 레이더 송신
           관점에서는 단위 시간당 전자기파로 내보내는 에너지율로 이해하면 된다.
@@ -100,7 +106,9 @@
           쏘는 동안 너무 가까운 표적에서 즉시 돌아온 echo는 놓칠 수 있다. 이상화하면 minimum range는 다음 항을
           가진다.
         </p>
-        <pre><code>R_min ~= c * tau / 2</code></pre>
+        <div class="math-display">\[
+          R_{\min} \approx \frac{c\,\tau}{2}
+        \]</div>
         <p>
           여기서 <code>tau</code>는 pulse width다. 실제 장비에서는 여기에 duplexer recovery, receiver ringdown,
           leakage, processing blanking 같은 항이 더 붙을 수 있다.
@@ -129,10 +137,12 @@
           레이더에서는 waveform bandwidth가 핵심이다. FMCW나 pulse compression처럼 대역폭 <code>B</code>를
           사용하는 경우 일반적으로 다음처럼 근사한다.
         </p>
-        <pre><code>delta_R ~= c / (2 * B)</code></pre>
+        <div class="math-display">\[
+          \Delta R \approx \frac{c}{2B}
+        \]</div>
         <p>
           단순 uncompressed pulse에서는 pulse width가 길수록 두 표적 echo가 시간축에서 겹치기 때문에
-          <code>delta_R ~= c * tau / 2</code>로 이해할 수 있다. 그래서 레이더 raw data는 보통 FFT나 matched
+          \(\Delta R \approx c\tau/2\)로 이해할 수 있다. 그래서 레이더 raw data는 보통 FFT나 matched
           filtering 이후 range bin 형태로 나타난다.
         </p>
 
