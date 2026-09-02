@@ -331,7 +331,7 @@ code {
 }
 
 .visitor-counter strong {
-  color: var(--ink);
+  color: var(--subtle);
   font-weight: 600;
 }
 
