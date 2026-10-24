@@ -1,9 +1,9 @@
 (function () {
-  var endpoint = "https://icount.kr/api.php?id=seunghwanbyun.github.io";
+  var endpoint = "assets/visitor-stats.json";
 
-  fetch(endpoint)
+  fetch(endpoint, { cache: "no-store" })
     .then(function (response) {
-      if (!response.ok) throw new Error("Visitor counter request failed");
+      if (!response.ok) throw new Error("Visitor stats request failed");
       return response.json();
     })
     .then(function (stats) {
@@ -21,6 +21,6 @@
       });
     })
     .catch(function () {
-      // The external widget remains the source of truth if the API is unavailable.
+      // assets/visitor-stats.json is generated periodically by a GitHub Action.
     });
 })();
