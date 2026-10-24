@@ -1,5 +1,11 @@
 {
-  "today": { "pv": 0 },
-  "yesterday": { "pv": 0 },
-  "total": { "pv": 0 }
+  "today": {
+    "pv": 0
+  },
+  "yesterday": {
+    "pv": 0
+  },
+  "total": {
+    "pv": 0
+  }
 }
