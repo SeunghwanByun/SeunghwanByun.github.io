@@ -1,0 +1,44 @@
+[
+  {
+    "id": "kalman-filter-study-note",
+    "title": "Kalman Filter 이해 정리",
+    "url": "kalman-filter-study-note.html",
+    "categories": ["state-estimation"]
+  },
+  {
+    "id": "kalman-factor-graph-study-note",
+    "title": "Kalman Filter에서 Factor Graph까지",
+    "url": "kalman-factor-graph-study-note.html",
+    "categories": ["state-estimation", "slam"]
+  },
+  {
+    "id": "lidar-3d-detection-pipeline",
+    "title": "LiDAR 3D Object Detection 파이프라인 이해하기",
+    "url": "lidar-3d-detection-pipeline.html",
+    "categories": ["perception", "slam"]
+  },
+  {
+    "id": "slam-visual-odometry-note",
+    "title": "Visual Odometry 공부를 시작하며",
+    "url": "slam-visual-odometry-note.html",
+    "categories": ["slam"]
+  },
+  {
+    "id": "radar-blind-area-pulse-lidar-note",
+    "title": "해상 레이더 Blind Area와 Pulse/FMCW/LiDAR 개념 정리",
+    "url": "radar-blind-area-pulse-lidar-note.html",
+    "categories": ["radar-maritime-ai"]
+  },
+  {
+    "id": "radar-jepa-sea-clutter-plan",
+    "title": "Radar PPI Sequence와 JEPA 기반 Sea Clutter 탐지 계획",
+    "url": "radar-jepa-sea-clutter-plan.html",
+    "categories": ["radar-maritime-ai"]
+  },
+  {
+    "id": "vla-reading-template",
+    "title": "VLA 논문 리뷰 템플릿",
+    "url": "vla-reading-template.html",
+    "categories": ["vla"]
+  }
+]
