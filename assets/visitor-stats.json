@@ -1,9 +1,9 @@
 {
   "today": {
-    "pv": 2
+    "pv": 0
   },
   "yesterday": {
-    "pv": 0
+    "pv": 2
   },
   "total": {
     "pv": 20
