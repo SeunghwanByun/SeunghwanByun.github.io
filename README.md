@@ -19,5 +19,6 @@ Personal research blog for GitHub Pages.
 1. Add a new HTML file under `posts/`.
 2. Link the post from `research.html`.
 3. Add it to `index.html` if it should appear in Recent Posts.
+4. Copy the `<section class="comments">` block and the `assets/comments.js` script tag from an existing post to enable giscus comments.
 
 Open `index.html` in a browser or publish the repository with GitHub Pages.
